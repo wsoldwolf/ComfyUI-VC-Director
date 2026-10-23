@@ -1,0 +1,141 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2200" height="1530" viewBox="0 0 2200 1530" role="img" aria-labelledby="diagram-title diagram-description">
+<title id="diagram-title">ComfyUI-VC-Director 全体ブロック図 — Draft 0.3</title>
+<desc id="diagram-description">同じワークフローで言語生成と動画生成を切り替える構成。共有素材とシナリオからGemma4が時刻付きシーンEMDを生成し、Pythonが発話保護、人物参照、時間契約を処理してJSONを保存する。動画モードではJSONを読み、VC Scene Ref2VAとContext Loopで映像および音声を生成する。</desc>
+<defs>
+  <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#60748c"/></marker>
+  <marker id="teal-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#137d79"/></marker>
+  <marker id="red-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="#b34e61"/></marker>
+</defs>
+<g font-family="Meiryo, Yu Gothic, Noto Sans CJK JP, sans-serif">
+<rect x="0" y="0" width="2200" height="1530" rx="0" fill="#f7f9fc" stroke="none" stroke-width="1.6" />
+<text x="64" y="68" font-size="38" fill="#182b43" font-weight="700" >ComfyUI-VC-Director</text>
+<text x="64" y="108" font-size="25" fill="#53677e" font-weight="400" >シナリオから長尺動画へ — 単一ワークフローの全体構成</text>
+<text x="2136" y="66" font-size="18" fill="#2563a7" font-weight="700" text-anchor="end" letter-spacing="1.5">SPEC DRAFT 0.3</text>
+<text x="2136" y="101" font-size="18" fill="#53677e" font-weight="400" text-anchor="end">2026-10-24 · 初期実装の設計図</text>
+<rect x="96" y="166" width="530" height="160" rx="16" fill="#eaf7f5" stroke="#cbd5e1" stroke-width="1.6" />
+<path d="M 112 166 H 610" stroke="#137d79" stroke-width="4" stroke-linecap="round"/>
+<text x="119" y="200" font-size="15" fill="#137d79" font-weight="700" letter-spacing="1.2">SHARED INPUTS</text>
+<text x="119" y="239" font-size="24" fill="#182b43" font-weight="700" >共有素材・レジストリ</text>
+<text x="119" y="279" font-size="20" fill="#53677e" font-weight="400" >画像 ／ 参照音声 ／ 参照動画（任意）</text>
+<text x="119" y="309" font-size="20" fill="#53677e" font-weight="400" >人物・背景・声質を素材IDで管理</text>
+<rect x="674" y="166" width="740" height="160" rx="16" fill="#fff8e7" stroke="#cbd5e1" stroke-width="1.6" />
+<path d="M 690 166 H 1398" stroke="#926619" stroke-width="4" stroke-linecap="round"/>
+<text x="697" y="200" font-size="15" fill="#926619" font-weight="700" letter-spacing="1.2">AUTHOR INPUT</text>
+<text x="697" y="239" font-size="24" fill="#182b43" font-weight="700" >シナリオEMD</text>
+<text x="697" y="279" font-size="20" fill="#53677e" font-weight="400" >粗い物語・背景・出演者 @hero・台詞・固定条件</text>
+<text x="697" y="309" font-size="20" fill="#53677e" font-weight="400" >背景は参照画像あり／情景テキストのみを選択</text>
+<rect x="1462" y="166" width="650" height="160" rx="16" fill="#edf5ff" stroke="#cbd5e1" stroke-width="1.6" />
+<path d="M 1478 166 H 2096" stroke="#2563a7" stroke-width="4" stroke-linecap="round"/>
+<text x="1485" y="200" font-size="15" fill="#2563a7" font-weight="700" letter-spacing="1.2">PYTHON CONTRACT</text>
+<text x="1485" y="239" font-size="24" fill="#182b43" font-weight="700" >Context Loop時間契約</text>
+<text x="1485" y="279" font-size="20" fill="#53677e" font-weight="400" >24 fps ／ raw 17k+5 ／ Guide context 22 frame</text>
+<text x="1485" y="309" font-size="20" fill="#53677e" font-weight="400" >raw・採用区間・event時刻・音声contextを統一</text>
+<rect x="64" y="398" width="2080" height="398" rx="20" fill="#ffffff" stroke="#d9ceee" stroke-width="1.6" />
+<text x="96" y="441" font-size="27" fill="#7552c8" font-weight="700" >01  言語生成・コンパイル</text>
+<text x="96" y="765" font-size="20" fill="#7552c8" font-weight="400" >言語グループ ON ／ 動画グループ Mute</text>
+<rect x="64" y="1060" width="2080" height="326" rx="20" fill="#ffffff" stroke="#beded9" stroke-width="1.6" />
+<text x="96" y="1103" font-size="27" fill="#137d79" font-weight="700" >02  動画生成</text>
+<text x="2112" y="1103" font-size="20" fill="#137d79" font-weight="400" text-anchor="end">言語グループ Mute ／ 動画グループ ON</text>
+<path d="M 256 326 V 348 H 76 V 535 H 96" fill="none" stroke="#60748c" stroke-width="2.7" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#arrow)"/>
+<path d="M 1044 326 V 365 H 629 V 476" fill="none" stroke="#60748c" stroke-width="2.7" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#arrow)"/>
+<path d="M 1975 326 V 476" fill="none" stroke="#60748c" stroke-width="2.7" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#arrow)"/>
+<path d="M 626 249 H 650 V 372 H 1860 V 476" fill="none" stroke="#137d79" stroke-width="2.7" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="9 7" marker-end="url(#teal-arrow)"/>
+<path d="M 96 246 H 40 V 1350 H 629 V 1320" fill="none" stroke="#137d79" stroke-width="2.7" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="9 7" marker-end="url(#teal-arrow)"/>
+<rect x="96" y="476" width="320" height="230" rx="16" fill="#f3effc" stroke="#cbd5e1" stroke-width="1.6" />
+<path d="M 112 476 H 400" stroke="#7552c8" stroke-width="4" stroke-linecap="round"/>
+<text x="119" y="510" font-size="15" fill="#7552c8" font-weight="700" letter-spacing="1.2">VISION · REUSED</text>
+<text x="119" y="549" font-size="21" fill="#182b43" font-weight="700" >Image to Subject EMD</text>
+<text x="119" y="589" font-size="20" fill="#53677e" font-weight="400" >画像 → 人物／背景断片</text>
+<text x="119" y="619" font-size="20" fill="#53677e" font-weight="400" >作者の特徴を優先保持</text>
+<text x="119" y="649" font-size="20" fill="#53677e" font-weight="400" >元画像・素材IDを維持</text>
+<rect x="464" y="476" width="330" height="230" rx="16" fill="#f3effc" stroke="#cbd5e1" stroke-width="1.6" />
+<path d="M 480 476 H 778" stroke="#7552c8" stroke-width="4" stroke-linecap="round"/>
+<text x="487" y="510" font-size="15" fill="#7552c8" font-weight="700" letter-spacing="1.2">GEMMA4 · CORE</text>
+<text x="487" y="549" font-size="24" fill="#182b43" font-weight="700" >Story Enhancer</text>
+<text x="487" y="589" font-size="20" fill="#53677e" font-weight="400" >意図・必須出来事の整理</text>
+<text x="487" y="619" font-size="20" fill="#53677e" font-weight="400" >背景・出演者・制約を固定</text>
+<text x="487" y="649" font-size="20" fill="#53677e" font-weight="400" >観察断片を統合</text>
+<rect x="842" y="476" width="400" height="230" rx="16" fill="#f3effc" stroke="#cbd5e1" stroke-width="1.6" />
+<path d="M 858 476 H 1226" stroke="#7552c8" stroke-width="4" stroke-linecap="round"/>
+<text x="865" y="510" font-size="15" fill="#7552c8" font-weight="700" letter-spacing="1.2">GEMMA4 · CORE</text>
+<text x="865" y="549" font-size="23" fill="#182b43" font-weight="700" >Story Timeline Planner</text>
+<text x="865" y="589" font-size="20" fill="#53677e" font-weight="400" >構成 → 詳細化 → 具体的時刻</text>
+<text x="865" y="619" font-size="20" fill="#53677e" font-weight="400" >演技・撮影・許可音響を展開</text>
+<text x="865" y="649" font-size="20" fill="#53677e" font-weight="400" >各Sceneは15秒以内を目標</text>
+<rect x="1290" y="476" width="330" height="230" rx="16" fill="#fff8e7" stroke="#cbd5e1" stroke-width="1.6" />
+<path d="M 1306 476 H 1604" stroke="#926619" stroke-width="4" stroke-linecap="round"/>
+<text x="1313" y="510" font-size="15" fill="#926619" font-weight="700" letter-spacing="1.2">EDITABLE INTERMEDIATE</text>
+<text x="1313" y="549" font-size="24" fill="#182b43" font-weight="700" >シーンEMD</text>
+<text x="1313" y="589" font-size="20" fill="#53677e" font-weight="400" >時刻付きH3シーケンス</text>
+<text x="1313" y="619" font-size="20" fill="#53677e" font-weight="400" >状態・出典・依存も保存</text>
+<text x="1313" y="649" font-size="20" fill="#53677e" font-weight="400" >確認・編集・固定が可能</text>
+<rect x="1668" y="476" width="444" height="230" rx="16" fill="#edf5ff" stroke="#cbd5e1" stroke-width="1.6" />
+<path d="M 1684 476 H 2096" stroke="#2563a7" stroke-width="4" stroke-linecap="round"/>
+<text x="1691" y="510" font-size="15" fill="#2563a7" font-weight="700" letter-spacing="1.2">PYTHON · COMPILE</text>
+<text x="1691" y="549" font-size="24" fill="#182b43" font-weight="700" >EMDコンパイラ</text>
+<text x="1691" y="589" font-size="20" fill="#53677e" font-weight="400" >発話退避 → 描写だけ英訳 → 結合</text>
+<text x="1691" y="619" font-size="20" fill="#53677e" font-weight="400" >@hero → &lt;Subject N&gt;・素材解決</text>
+<text x="1691" y="649" font-size="20" fill="#53677e" font-weight="400" >時間契約・音響指示・参照schedule</text>
+<path d="M 416 582 H 464" fill="none" stroke="#60748c" stroke-width="2.7" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#arrow)"/>
+<path d="M 794 582 H 842" fill="none" stroke="#60748c" stroke-width="2.7" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#arrow)"/>
+<path d="M 1242 582 H 1290" fill="none" stroke="#60748c" stroke-width="2.7" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#arrow)"/>
+<path d="M 1620 582 H 1668" fill="none" stroke="#60748c" stroke-width="2.7" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#arrow)"/>
+<path d="M 1668 681 H 1644 V 746 H 1042 V 706" fill="none" stroke="#b34e61" stroke-width="2.7" stroke-linejoin="round" stroke-linecap="round" stroke-dasharray="9 7" marker-end="url(#red-arrow)"/>
+<text x="1370" y="777" font-size="18" fill="#b34e61" font-weight="400" text-anchor="middle">構造・時刻エラーは対象段階だけを有限回修正</text>
+<path d="M 1890 706 V 842" fill="none" stroke="#60748c" stroke-width="2.7" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#arrow)"/>
+<rect x="96" y="842" width="2016" height="150" rx="18" fill="#fff8e7" stroke="#dfc995" stroke-width="1.6" />
+<text x="121" y="879" font-size="22" fill="#926619" font-weight="700" >保存ファイル境界</text>
+<text x="121" y="915" font-size="23" fill="#182b43" font-weight="700" >scenario.emd / scenes.emd</text>
+<text x="121" y="952" font-size="19" fill="#53677e" font-weight="400" >作者入力と編集可能な中間形式</text>
+<path d="M 692 864 V 972 M 1434 864 V 972" stroke="#dfc995" stroke-width="1.5"/>
+<text x="728" y="879" font-size="16" fill="#926619" font-weight="700" letter-spacing="1">VIDEO INPUT</text>
+<text x="728" y="915" font-size="25" fill="#182b43" font-weight="700" >plan.json  +  execution.json</text>
+<text x="728" y="952" font-size="19" fill="#53677e" font-weight="400" >H3 prompt・時刻対応・人物／参照番号・音響制御</text>
+<text x="1468" y="879" font-size="16" fill="#926619" font-weight="700" letter-spacing="1">RUN METADATA</text>
+<text x="1468" y="915" font-size="24" fill="#182b43" font-weight="700" >run_metadata.json</text>
+<text x="1468" y="952" font-size="19" fill="#53677e" font-weight="400" >hash・モデル・Contract・翻訳trace</text>
+<path d="M 1050 992 V 1010 H 76 V 1205 H 96" fill="none" stroke="#60748c" stroke-width="2.7" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#arrow)"/>
+<text x="700" y="1040" font-size="21" fill="#53677e" font-weight="400" >動画生成は保存済みJSONを読込。LLMへのlive接続は不要。</text>
+<rect x="96" y="1140" width="320" height="180" rx="16" fill="#eaf7f5" stroke="#cbd5e1" stroke-width="1.6" />
+<path d="M 112 1140 H 400" stroke="#137d79" stroke-width="4" stroke-linecap="round"/>
+<text x="119" y="1174" font-size="15" fill="#137d79" font-weight="700" letter-spacing="1.2">LOAD &amp; VALIDATE</text>
+<text x="119" y="1213" font-size="24" fill="#182b43" font-weight="700" >JSON読込・照合</text>
+<text x="119" y="1253" font-size="20" fill="#53677e" font-weight="400" >素材・hash・Contract確認</text>
+<text x="119" y="1283" font-size="20" fill="#53677e" font-weight="400" >人物・native番号を照合</text>
+<rect x="464" y="1140" width="330" height="180" rx="16" fill="#eaf7f5" stroke="#cbd5e1" stroke-width="1.6" />
+<path d="M 480 1140 H 778" stroke="#137d79" stroke-width="4" stroke-linecap="round"/>
+<text x="487" y="1174" font-size="15" fill="#137d79" font-weight="700" letter-spacing="1.2">REFERENCE CONDITIONING</text>
+<text x="487" y="1213" font-size="23" fill="#182b43" font-weight="700" >VC Scene Ref2VA</text>
+<text x="487" y="1253" font-size="20" fill="#53677e" font-weight="400" >Sceneごとの素材を選択</text>
+<text x="487" y="1283" font-size="20" fill="#53677e" font-weight="400" >発話の再置換を防止</text>
+<rect x="842" y="1140" width="400" height="180" rx="16" fill="#eaf7f5" stroke="#cbd5e1" stroke-width="1.6" />
+<path d="M 858 1140 H 1226" stroke="#137d79" stroke-width="4" stroke-linecap="round"/>
+<text x="865" y="1174" font-size="15" fill="#137d79" font-weight="700" letter-spacing="1.2">H3 · CONTEXT LOOP</text>
+<text x="865" y="1213" font-size="24" fill="#182b43" font-weight="700" >全Sceneを順次生成</text>
+<text x="865" y="1253" font-size="20" fill="#53677e" font-weight="400" >映像 ＋ 音声をH3が生成</text>
+<text x="865" y="1283" font-size="20" fill="#53677e" font-weight="400" >cut／continue・生成context</text>
+<rect x="1290" y="1140" width="330" height="180" rx="16" fill="#eaf7f5" stroke="#cbd5e1" stroke-width="1.6" />
+<path d="M 1306 1140 H 1604" stroke="#137d79" stroke-width="4" stroke-linecap="round"/>
+<text x="1313" y="1174" font-size="15" fill="#137d79" font-weight="700" letter-spacing="1.2">STANDARD PIPELINE</text>
+<text x="1313" y="1213" font-size="24" fill="#182b43" font-weight="700" >Trim・保存・連結</text>
+<text x="1313" y="1253" font-size="20" fill="#53677e" font-weight="400" >decode → Segment Save</text>
+<text x="1313" y="1283" font-size="20" fill="#53677e" font-weight="400" >match_tail → Assemble</text>
+<rect x="1668" y="1140" width="444" height="180" rx="16" fill="#eaf7f5" stroke="#cbd5e1" stroke-width="1.6" />
+<path d="M 1684 1140 H 2096" stroke="#137d79" stroke-width="4" stroke-linecap="round"/>
+<text x="1691" y="1174" font-size="15" fill="#137d79" font-weight="700" letter-spacing="1.2">OUTPUT</text>
+<text x="1691" y="1213" font-size="24" fill="#182b43" font-weight="700" >長尺動画 ＋ H3生成音声</text>
+<text x="1691" y="1253" font-size="20" fill="#53677e" font-weight="400" >generated_audioを採用</text>
+<text x="1691" y="1283" font-size="20" fill="#53677e" font-weight="400" >生成Run・checkpointを保存</text>
+<path d="M 416 1230 H 464" fill="none" stroke="#60748c" stroke-width="2.7" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#arrow)"/>
+<path d="M 794 1230 H 842" fill="none" stroke="#60748c" stroke-width="2.7" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#arrow)"/>
+<path d="M 1242 1230 H 1290" fill="none" stroke="#60748c" stroke-width="2.7" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#arrow)"/>
+<path d="M 1620 1230 H 1668" fill="none" stroke="#60748c" stroke-width="2.7" stroke-linejoin="round" stroke-linecap="round"  marker-end="url(#arrow)"/>
+<text x="100" y="1344" font-size="18" fill="#137d79" font-weight="400" >共有素材の実データは動画側でも利用</text>
+<text x="96" y="1433" font-size="20" fill="#182b43" font-weight="700" >切替</text>
+<text x="166" y="1433" font-size="21" fill="#182b43" font-weight="400" >言語ON → JSON保存  ／  動画ON → 保存JSONで生成  ／  両方Mute → 何もしない</text>
+<text x="96" y="1474" font-size="21" fill="#53677e" font-weight="400" >入力音声は参照専用。発声／無音は明示指示し、音声コピー・後付けmixは行わない。</text>
+<path d="M 1710 1430 H 1765" stroke="#60748c" stroke-width="2.7" marker-end="url(#arrow)"/>
+<text x="1780" y="1437" font-size="18" fill="#53677e" font-weight="400" >処理・成果物</text>
+<path d="M 1950 1430 H 2005" stroke="#137d79" stroke-width="2.7" stroke-dasharray="9 7" marker-end="url(#teal-arrow)"/>
+<text x="2020" y="1437" font-size="18" fill="#53677e" font-weight="400" >共有素材</text>
+</g></svg>

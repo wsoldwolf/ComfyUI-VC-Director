@@ -1,0 +1,11 @@
+{
+  "shots": [
+    {
+      "id": "sc_return_a",
+      "length": 243,
+      "prompt": "subject_definitions:\n<Subject 1>: A traveler wearing a red coat.\nEnvironment: A station square at dusk. The specified environment and lighting take precedence over backgrounds in identity reference images.\n\nsummary:\n[reference generation] The traveler returns to town.\n\nretention_analysis:\n<Subject 1>: fully_preserved\n\ndetailed_description:\nQuiet cinema.\n[00:00.000 --> 00:10.000] ACTION <Subject 1>: Walks out of the station and looks at the street.\n[00:05.000 --> 00:07.000] <Subject 1> speaks <d>[Japanese]ただいま。 @hero @recipient</d>\n\noverall_soundscape:\nOnly the assigned speaker speaks the exact <d> words during the specified dialogue intervals. No extra words, paraphrasing, repetition, narration, singing, humming or other vocalization. Never read descriptions or reference audio aloud. No vocalization outside dialogue intervals. No background music or diegetic music. No ambience. No sound effects. Audio references condition timbre and sound character only; do not copy or recite their content.\n\nnon_diegetic_music:\nN/A",
+      "context_length": 0,
+      "audio_context_length": 0
+    }
+  ]
+}

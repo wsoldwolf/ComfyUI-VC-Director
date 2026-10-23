@@ -1,0 +1,104 @@
+{
+  "schema": "VCD_LLM_REQUEST_V1",
+  "request_id": "outline_request_a",
+  "stage": "outline",
+  "targets": [
+    {
+      "slot": 1,
+      "target_id": "return"
+    }
+  ],
+  "retry": "initial",
+  "errors": [],
+  "payload": {
+    "scenario": {
+      "schema": "VCD_SCENARIO_V1",
+      "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "duration_ms": 10000,
+      "project_id": "homecoming",
+      "actors": [
+        {
+          "id": "hero",
+          "name": "少女",
+          "description": "赤いコートを着た旅人。",
+          "image_asset_id": "hero_image",
+          "video_asset_id": null,
+          "voice_asset_id": null
+        }
+      ],
+      "backgrounds": [
+        {
+          "id": "station",
+          "description": "夕暮れの駅前。",
+          "image_asset_id": null
+        }
+      ],
+      "beats": [
+        {
+          "id": "return",
+          "text": "少女が駅を出て町を見渡す。",
+          "actor_ids": [
+            "hero"
+          ],
+          "background_id": "station",
+          "source": {
+            "first_line": 1,
+            "last_line": 1,
+            "document": "scenario"
+          },
+          "dialogues": [],
+          "audio": {
+            "vocal": "none",
+            "bgm": "none",
+            "bgm_description": null,
+            "ambience": "none",
+            "ambience_description": null,
+            "effects": "none",
+            "effects_description": null,
+            "reference_audio": []
+          }
+        }
+      ],
+      "constraints": [],
+      "audio": {
+        "vocal": "none",
+        "bgm": "none",
+        "bgm_description": null,
+        "ambience": "none",
+        "ambience_description": null,
+        "effects": "none",
+        "effects_description": null,
+        "reference_audio": []
+      },
+      "direction": [
+        "静かな短編映画。"
+      ]
+    },
+    "enhanced": {
+      "schema": "VCD_ENHANCED_STORY_V1",
+      "project_id": "homecoming",
+      "scenario_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "intent": "故郷へ戻った少女の静かな導入。",
+      "beats": [
+        {
+          "id": "return",
+          "intent": "帰郷を見せる。",
+          "required_events": [
+            {
+              "id": "req_exit",
+              "text": "駅から出る。",
+              "source": {
+                "first_line": 1,
+                "last_line": 1,
+                "document": "scenario"
+              },
+              "beat_id": "return"
+            }
+          ]
+        }
+      ],
+      "constraints": []
+    },
+    "accepted_outlines": []
+  }
+}

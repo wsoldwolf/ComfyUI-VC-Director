@@ -1,0 +1,380 @@
+{
+  "schema": "VCD_MV_SOURCE_PROVENANCE_V1",
+  "source_head": "f01685c0e99223118cc91bd3346c4d2eef802fb8",
+  "source_kind": "local_working_tree_snapshot",
+  "copyright": "Copyright (c) 2026 wsoldwolf",
+  "license": "GPL-3.0-only",
+  "files": [
+    {
+      "source": "core/__init__.py",
+      "source_sha256": "f5fc1746485b21772c8e23135a0279a51943100d01ec2d713196ac97cbdf1429",
+      "target": null,
+      "status": "not_required",
+      "note": "Unused legacy dependency or package entry point; excluded from integrated runtime"
+    },
+    {
+      "source": "core/artifacts/__init__.py",
+      "source_sha256": "dff87ff1f9e235a80327ab6d2b25b79a424adfea4774624cd5c1e560e83fe619",
+      "target": "core/artifacts/__init__.py",
+      "status": "merged",
+      "integrated_sha256": "bda8cd5117e57e5a04a9dc5ed70a5cd10ab41ec344d36fab7d30952a70f8cf3a"
+    },
+    {
+      "source": "core/artifacts/base.py",
+      "source_sha256": "b66fb47e8b22f36f48a7190c65187a0bc0225ac33733de159c55a0bb58cafda8",
+      "target": "core/artifacts/base.py",
+      "status": "integrated",
+      "integrated_sha256": "b66fb47e8b22f36f48a7190c65187a0bc0225ac33733de159c55a0bb58cafda8"
+    },
+    {
+      "source": "core/artifacts/direction.py",
+      "source_sha256": "cb4296ded856233fad3eee12470a8f52d411876f777968e507d89ae91f5b66a8",
+      "target": null,
+      "status": "not_required",
+      "note": "Unused legacy dependency or package entry point; excluded from integrated runtime"
+    },
+    {
+      "source": "core/artifacts/emd.py",
+      "source_sha256": "705a699feebba111810dc520943a1cbdb44a3caf3f4870867124fdeaed645ffa",
+      "target": "core/artifacts/emd.py",
+      "status": "integrated",
+      "integrated_sha256": "b50d053adb7a238dee8f8c9b9df9aee44e187fa1b4b0b488eaa4e5a2974ba046"
+    },
+    {
+      "source": "core/artifacts/errors.py",
+      "source_sha256": "0b72194d0176b392982051111f1bb43f992a77c50c6500cee56939be88e2661f",
+      "target": "core/artifacts/errors.py",
+      "status": "integrated",
+      "integrated_sha256": "0b72194d0176b392982051111f1bb43f992a77c50c6500cee56939be88e2661f"
+    },
+    {
+      "source": "core/artifacts/observations.py",
+      "source_sha256": "15ee90a5c6c87c54d4b89db4633594d4cb0d5e5137224df25d0354b8ea1d523f",
+      "target": "core/artifacts/observations.py",
+      "status": "integrated",
+      "integrated_sha256": "15ee90a5c6c87c54d4b89db4633594d4cb0d5e5137224df25d0354b8ea1d523f"
+    },
+    {
+      "source": "core/artifacts/references.py",
+      "source_sha256": "0267a1ac8f8ce6e2d341b2f8e3888b477d48c34db3b963aced446472935bc817",
+      "target": "core/artifacts/references.py",
+      "status": "integrated",
+      "integrated_sha256": "0267a1ac8f8ce6e2d341b2f8e3888b477d48c34db3b963aced446472935bc817"
+    },
+    {
+      "source": "core/artifacts/timeline.py",
+      "source_sha256": "5059b4696d727fdbb3b134b3748272b5a050a70db28815ac83daf0b8739a3caa",
+      "target": null,
+      "status": "not_required",
+      "note": "Unused legacy dependency or package entry point; excluded from integrated runtime"
+    },
+    {
+      "source": "core/compiler/__init__.py",
+      "source_sha256": "51881ebe6c095465e54ac2a187369f4c892e509c9657246e5a8062c91293adc1",
+      "target": null,
+      "status": "not_required",
+      "note": "Unused legacy dependency or package entry point; excluded from integrated runtime"
+    },
+    {
+      "source": "core/compiler/errors.py",
+      "source_sha256": "0057f7725611f1e1c4b75ee25ec063f6edff060daeccf4fd799659141323b13c",
+      "target": "core/compiler/errors.py",
+      "status": "integrated",
+      "integrated_sha256": "0057f7725611f1e1c4b75ee25ec063f6edff060daeccf4fd799659141323b13c"
+    },
+    {
+      "source": "core/compiler/llama_translator.py",
+      "source_sha256": "e1d372f806aedee2b82d117cd4b9d3f6bda0a3a80c07c57cdf01c8d99755f824",
+      "target": null,
+      "status": "not_required",
+      "note": "Unused legacy dependency or package entry point; excluded from integrated runtime"
+    },
+    {
+      "source": "core/compiler/protection.py",
+      "source_sha256": "85b27218c45a5a18c3d1cd9e7263981886d497dd83f9233f7e0e3b89482a5fd6",
+      "target": "core/compiler/protection.py",
+      "status": "integrated",
+      "integrated_sha256": "80ebdaaff59c3943eecb021e01914dd3e62fd074998d83e9d68b547bb4501d9a"
+    },
+    {
+      "source": "core/compiler/ref2va.py",
+      "source_sha256": "85a1d820b79a42f628561f4af9635d3f922a46fe3ee3955adf08b58804abcbb2",
+      "target": null,
+      "status": "not_required",
+      "note": "Unused legacy dependency or package entry point; excluded from integrated runtime"
+    },
+    {
+      "source": "core/compiler/translator.py",
+      "source_sha256": "d10e21055ce23c3e9568db88d2dc7bea44a7413ad25e5505e9d98f7461304f37",
+      "target": null,
+      "status": "not_required",
+      "note": "Unused legacy dependency or package entry point; excluded from integrated runtime"
+    },
+    {
+      "source": "core/compiler/whole_field.py",
+      "source_sha256": "8b3a09c2af59eda8b12488352c82b644b03f42b49a4f0f60873b25a5b433e9eb",
+      "target": "core/compiler/whole_field.py",
+      "status": "integrated",
+      "integrated_sha256": "9023dfe1d3c5bf53e86f4bc319cfdb95b76226ab355ef53f5584858161d16ee4"
+    },
+    {
+      "source": "core/emd/__init__.py",
+      "source_sha256": "c6ed6d6d6c0596b25383f79de5aeb38791b415a7cd0af0a7a4c775a621cb9546",
+      "target": "core/emd/__init__.py",
+      "status": "merged",
+      "integrated_sha256": "f55c0a98b0745ac61a8a7299418750fd8693e002f6e0c4ada8bd893e26b5112e"
+    },
+    {
+      "source": "core/emd/ast.py",
+      "source_sha256": "358168b9e8cb5b60ee463c209d70b8b703f9d02af3c8c92af9bcd847e9d26c78",
+      "target": "core/emd/ast.py",
+      "status": "integrated",
+      "integrated_sha256": "fcdfaecf86e3944a11f925e4bf74dac762a3a5564871b02dc5cb01df7ec194c2"
+    },
+    {
+      "source": "core/emd/audio_activity.py",
+      "source_sha256": "da5e97ed51986d636e4d6b1d24773b0e8dfa02cab0ba2bfc00bbe76051a8685b",
+      "target": "core/emd/audio_activity.py",
+      "status": "integrated",
+      "integrated_sha256": "f2a50a373e131fd29d73b8566fe5028fe16d53d8f5a8403b5149e4a557d88958"
+    },
+    {
+      "source": "core/emd/common.py",
+      "source_sha256": "2c715103b08f4b78990e358d29d5df94d34c71131ac679e32c48c564e6fffb0b",
+      "target": null,
+      "status": "not_required",
+      "note": "Unused legacy dependency or package entry point; excluded from integrated runtime"
+    },
+    {
+      "source": "core/emd/errors.py",
+      "source_sha256": "0ce15048ea3770759e1f093fee8aac3eb281482c88a4c011055c11f32a0da39a",
+      "target": "core/emd/errors.py",
+      "status": "integrated",
+      "integrated_sha256": "0ce15048ea3770759e1f093fee8aac3eb281482c88a4c011055c11f32a0da39a"
+    },
+    {
+      "source": "core/emd/motion_templates.py",
+      "source_sha256": "399d40a263b4eca4b1719d0c3a6df9f04fa0bf80c7faa4d2b8d90d05f791c7ab",
+      "target": null,
+      "status": "not_required",
+      "note": "Unused legacy dependency or package entry point; excluded from integrated runtime"
+    },
+    {
+      "source": "core/emd/parser.py",
+      "source_sha256": "a5bb1d717fbf4cd139825e9bc195f3447d4593ecd933f73715061eee492fad04",
+      "target": null,
+      "status": "not_required",
+      "note": "Unused legacy dependency or package entry point; excluded from integrated runtime"
+    },
+    {
+      "source": "core/emd/scene_fragment.py",
+      "source_sha256": "493a08390eb72628f0d8ce4612f96a75dae0c09f441a40be97574f72b4fadbbb",
+      "target": "core/emd/scene_fragment.py",
+      "status": "integrated",
+      "integrated_sha256": "493a08390eb72628f0d8ce4612f96a75dae0c09f441a40be97574f72b4fadbbb"
+    },
+    {
+      "source": "core/emd/subject_fragment.py",
+      "source_sha256": "7e9c00a3e12ef2618ec4498783bbbe9c4203d218fa82190a33af09e9c01aef1a",
+      "target": null,
+      "status": "not_required",
+      "note": "Unused legacy dependency or package entry point; excluded from integrated runtime"
+    },
+    {
+      "source": "core/emd/subject_references.py",
+      "source_sha256": "70dfdabf324d7acd52325522310c46dbe00db92ebaf907f3cc14c4eb17913d5b",
+      "target": "core/emd/subject_references.py",
+      "status": "integrated",
+      "integrated_sha256": "e0448ddcfefc61ae8fb4e00615a8fac0cd954f03e2d7911c2ed56c3398d0b8ba"
+    },
+    {
+      "source": "core/h3_contract/__init__.py",
+      "source_sha256": "5350027e570e264a9e0f79afa06637fbbc397675fc5ece604fc6622842622b0a",
+      "target": "core/h3_contract/__init__.py",
+      "status": "merged",
+      "integrated_sha256": "f03fc73ee5f4d6d7abf01061a4ec675b7fe8ae5fac0e9292cd787558140c6bdc"
+    },
+    {
+      "source": "core/h3_contract/camera.py",
+      "source_sha256": "de82fa149a01a80b868ebeb2dc2ec783b500c79ccd8126c9624156cb6c9e3ba1",
+      "target": "core/h3_contract/camera.py",
+      "status": "integrated",
+      "integrated_sha256": "de82fa149a01a80b868ebeb2dc2ec783b500c79ccd8126c9624156cb6c9e3ba1"
+    },
+    {
+      "source": "core/h3_contract/context_loop.py",
+      "source_sha256": "19a9077e3a61af6c8aaeb8d91dde5c92ac2dcf67a898c4ed23ab93538ff94818",
+      "target": "core/h3_contract/context_loop.py",
+      "status": "integrated",
+      "integrated_sha256": "eb8458e70cf03954f21bdf907c920bd8b15410d7b78241ae169cceb47b9ef981"
+    },
+    {
+      "source": "core/h3_contract/context_loop_0_6_9.py",
+      "source_sha256": "8fce310727e6139fcf7e2fd4348a078bcab9683a796e805155d466f28405e826",
+      "target": "core/h3_contract/context_loop_0_6_9.py",
+      "status": "integrated",
+      "integrated_sha256": "8fce310727e6139fcf7e2fd4348a078bcab9683a796e805155d466f28405e826"
+    },
+    {
+      "source": "core/h3_contract/environment_reference.py",
+      "source_sha256": "3121791210056192c690b89475c93430a2feb4ad6bd08674a356cdf55d6a5543",
+      "target": null,
+      "status": "not_required",
+      "note": "Unused legacy dependency or package entry point; excluded from integrated runtime"
+    },
+    {
+      "source": "core/h3_contract/timing.py",
+      "source_sha256": "71c20958d8120bc13b7a10fba83208dc71acebbcf9d3e98b4e98ef894ea97052",
+      "target": null,
+      "status": "not_required",
+      "note": "Unused legacy dependency or package entry point; excluded from integrated runtime"
+    },
+    {
+      "source": "core/inference/__init__.py",
+      "source_sha256": "b5486e02d4c75e3614d46e93f70edd5f2bd7e3210d50672b17f4bbf085538a14",
+      "target": "core/inference/__init__.py",
+      "status": "merged",
+      "integrated_sha256": "5b0c5b2e98a61484c5e7a1680203580335a322f2fd55f2c41218a3e5433043fc"
+    },
+    {
+      "source": "core/inference/budget.py",
+      "source_sha256": "863e7b665a864ceeb876ce2b309092f32d9eb96ba3a988a1b1582e9be1b0014a",
+      "target": "core/inference/budget.py",
+      "status": "integrated",
+      "integrated_sha256": "863e7b665a864ceeb876ce2b309092f32d9eb96ba3a988a1b1582e9be1b0014a"
+    },
+    {
+      "source": "core/inference/cache.py",
+      "source_sha256": "9199524dfe4cf86a444edf269d6597b228141cd822e25b37ffdb7771b3f9db26",
+      "target": "core/inference/cache.py",
+      "status": "integrated",
+      "integrated_sha256": "9199524dfe4cf86a444edf269d6597b228141cd822e25b37ffdb7771b3f9db26"
+    },
+    {
+      "source": "core/inference/discovery.py",
+      "source_sha256": "2fb8d2e5dc56eb5e24242ba9b4a4e5c15dadbc94bcf782369805d2b2c79017c0",
+      "target": "core/inference/discovery.py",
+      "status": "integrated",
+      "integrated_sha256": "2fb8d2e5dc56eb5e24242ba9b4a4e5c15dadbc94bcf782369805d2b2c79017c0"
+    },
+    {
+      "source": "core/inference/llama_cpp_backend.py",
+      "source_sha256": "5d13ee1f7f0422fa3019227e4ee72dbb90c6cdbe68c026fa19dffc0fc17d0e78",
+      "target": "core/inference/llama_cpp_backend.py",
+      "status": "integrated",
+      "integrated_sha256": "e591f62b7b4672ca31cd444777fa8656ea07af016da5999eb487fb9ccfdc6d3a"
+    },
+    {
+      "source": "core/inference/runtime.py",
+      "source_sha256": "d414d5aff996215e15e1e9a8b12b2e8ad6fa47debae7ee8971264c7a5696b905",
+      "target": "core/inference/runtime.py",
+      "status": "integrated",
+      "integrated_sha256": "d414d5aff996215e15e1e9a8b12b2e8ad6fa47debae7ee8971264c7a5696b905"
+    },
+    {
+      "source": "core/protocols/__init__.py",
+      "source_sha256": "d4bbf46d98bf516e7f8f5d2de655f6187025d357416403630be1329c17ee1a4a",
+      "target": "core/protocols/__init__.py",
+      "status": "merged",
+      "integrated_sha256": "859656bb0e24dd1336da12aae46d5613b559a438ab5ce77596e34ebf7045ce7e"
+    },
+    {
+      "source": "core/protocols/llm_records.py",
+      "source_sha256": "c19599a5d84ab4627a796a770792ebc1f9d305fe1f68185632be85f814e06165",
+      "target": "core/protocols/llm_records.py",
+      "status": "integrated",
+      "integrated_sha256": "c19599a5d84ab4627a796a770792ebc1f9d305fe1f68185632be85f814e06165"
+    },
+    {
+      "source": "core/protocols/vision_contract.py",
+      "source_sha256": "950dbdfd7b48b085ee17ae1dc21e296a2e475572f759957893e0d16999e26a87",
+      "target": "core/protocols/vision_contract.py",
+      "status": "integrated",
+      "integrated_sha256": "950dbdfd7b48b085ee17ae1dc21e296a2e475572f759957893e0d16999e26a87"
+    },
+    {
+      "source": "core/protocols/vision_lines.py",
+      "source_sha256": "d5528a9f9047a58919fbe7847717fd295d878cffe554b2b7883039f156832b34",
+      "target": "core/protocols/vision_lines.py",
+      "status": "integrated",
+      "integrated_sha256": "d5528a9f9047a58919fbe7847717fd295d878cffe554b2b7883039f156832b34"
+    },
+    {
+      "source": "core/vision/__init__.py",
+      "source_sha256": "1e858543bc5c8593451700271b51882f071d2f0202316d3d6b5f2e5651569613",
+      "target": "core/vision/__init__.py",
+      "status": "merged",
+      "integrated_sha256": "311dae97d80b82d63b26c42cbb9a9ac4156a1a9ffbd50dea430d1f3ef5dc4daf"
+    },
+    {
+      "source": "core/vision/graph_binding.py",
+      "source_sha256": "2d4455a4ecc4406776f98d8a7d8ab17ccb03c03c29faa7e2c7a3280ff28db527",
+      "target": "core/vision/graph_binding.py",
+      "status": "integrated",
+      "integrated_sha256": "6ba84442f6feb369f7b46e4edb09abbab9766d49ae8b0d00f9da22e06e12ad31"
+    },
+    {
+      "source": "core/vision/image_data.py",
+      "source_sha256": "5fd80e2c5da120c91bd6ea24b8f5f88c7ff555ef50e5d81c5bd6c6178e8cc108",
+      "target": "core/vision/image_data.py",
+      "status": "integrated",
+      "integrated_sha256": "5fd80e2c5da120c91bd6ea24b8f5f88c7ff555ef50e5d81c5bd6c6178e8cc108"
+    },
+    {
+      "source": "core/vision/image_to_subject.py",
+      "source_sha256": "fdd9ae043ed5a5534fc26573e5715f7bdd3832e953e8c09d4a42bdebe7745d92",
+      "target": "core/vision/observation.py",
+      "status": "integrated",
+      "integrated_sha256": "8cc2b4a8c58c19f07f79f4257705b22cda9a388f4240f8854d3745c05711f1a4"
+    },
+    {
+      "source": "core/vision/llama_cpp_vision.py",
+      "source_sha256": "2ffcf15fa23a155e19eef65d4d59832eb360dcfa63a4beaa57c3975285e3748a",
+      "target": "core/vision/llama_cpp_vision.py",
+      "status": "integrated",
+      "integrated_sha256": "cf7f933034df5cea1e9bccf8ddf05e7608f1160a5ca57b06fd7e04111f6cbf85"
+    },
+    {
+      "source": "core/vision/model_discovery.py",
+      "source_sha256": "98697f9b32cdd3a038bf83bcb62b81a728750a3ba90b04835bec4e2e129379dc",
+      "target": "core/vision/model_discovery.py",
+      "status": "integrated",
+      "integrated_sha256": "98697f9b32cdd3a038bf83bcb62b81a728750a3ba90b04835bec4e2e129379dc"
+    },
+    {
+      "source": "core/vision/scene_emd.py",
+      "source_sha256": "1c7da7a98c8fa99c5510dbd375324b21cf3c526693d33bdde1eb29f1537efc33",
+      "target": "core/vision/scene_emd.py",
+      "status": "integrated",
+      "integrated_sha256": "1c7da7a98c8fa99c5510dbd375324b21cf3c526693d33bdde1eb29f1537efc33"
+    },
+    {
+      "source": "core/vision/subject_emd.py",
+      "source_sha256": "0563a45cc0db9d9131a89d3d47813c4ceb165270f70e2ac439b102b28c322817",
+      "target": "core/vision/subject_emd.py",
+      "status": "integrated",
+      "integrated_sha256": "0563a45cc0db9d9131a89d3d47813c4ceb165270f70e2ac439b102b28c322817"
+    },
+    {
+      "source": "prompts/prompt_translation_ja_en_system_prompt.txt",
+      "source_sha256": "7aa01fd220147135be63e1c15a3dae4ff18ddb3fdfb83fe02950e64304b29018",
+      "target": "prompts/prompt_translation_ja_en_system_prompt.txt",
+      "status": "integrated",
+      "integrated_sha256": "d308ea29bab0225a3e2e42308a90017ce8c2ec88866474a6077bb44a4d1a7463"
+    },
+    {
+      "source": "prompts/prompt_translation_whole_field_system_prompt.txt",
+      "source_sha256": "b2c650e0d42e667d5a93f816fb489608f79fd7b907002d2fca6198103f2bae5d",
+      "target": "prompts/prompt_translation_whole_field_system_prompt.txt",
+      "status": "integrated",
+      "integrated_sha256": "8c257d12e3a2fd786b749100733baa8bf86e03e21cdefd011c0a4e37b88fdee8"
+    },
+    {
+      "source": "prompts/vision_observation_system_prompt.txt",
+      "source_sha256": "3fbb83bb1e61115dc3fcaf5ed516f867a3386178453b906e2e5670058ff95009",
+      "target": "prompts/vision_observation_system_prompt.txt",
+      "status": "integrated",
+      "integrated_sha256": "dfc9e9cbd09734985649cb716b56c9c8d928799ae412ee6bbc16b0ea0cb4c7f6"
+    }
+  ]
+}

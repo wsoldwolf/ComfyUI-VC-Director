@@ -1,0 +1,10 @@
+include LICENSE THIRD_PARTY.md README.md
+recursive-include core/artifacts/schemas *.json
+recursive-include core/h3_contract/contracts *.json
+recursive-include prompts *.txt
+recursive-include profiles *.json
+recursive-include assets/emd *.emd
+recursive-include web/js *.js
+recursive-include workflows *.json
+recursive-include tools/workflow_templates *.json
+include docs/implementation/mv-director-sources.json

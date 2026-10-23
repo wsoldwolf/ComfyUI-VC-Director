@@ -1,0 +1,103 @@
+"""Immutable EMD abstract syntax tree."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+from .audio_activity import AudioActivity
+
+
+@dataclass(frozen=True, slots=True)
+class Subject:
+    concept_id: str
+    subject_ref: str
+    description: str
+    references: tuple[str, ...]
+    line_number: int
+
+
+@dataclass(frozen=True, slots=True)
+class SceneSetting:
+    environment: tuple[str, ...]
+    time_lighting: tuple[str, ...] = ()
+    picture_ref: str | None = None
+    line_number: int = 0
+
+
+@dataclass(frozen=True, slots=True)
+class RetentionDirective:
+    concept_id: str
+    mode: str
+    description: str
+    line_number: int
+
+
+@dataclass(frozen=True, slots=True)
+class LyricAnnotation:
+    text: str
+    section: str | None
+    start_ms: int | None
+    end_ms: int | None
+    line_number: int
+
+
+@dataclass(frozen=True, slots=True)
+class AudioDirective:
+    mode: str
+    target_concept_id: str | None
+    audio_slot: int | None
+    line_number: int
+
+
+@dataclass(frozen=True, slots=True)
+class MouthPerformance:
+    """An authored visual intention, not an audio detection or audio mask."""
+
+    target_concept_id: str
+    start_ms: int
+    end_ms: int
+    state: str
+    line_number: int = 0
+
+
+@dataclass(frozen=True, slots=True)
+class ShotDirective:
+    kind: str
+    text: str
+    line_number: int
+
+
+@dataclass(frozen=True, slots=True)
+class Shot:
+    start_ms: int
+    body: tuple[str, ...]
+    lyric_annotations: tuple[LyricAnnotation, ...]
+    lyric_lip_sync: tuple[tuple[str, str], ...]
+    line_number: int
+    directives: tuple[ShotDirective, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class Scene:
+    scene_number: int
+    start_ms: int
+    end_ms: int
+    h3_length: int
+    descriptions: tuple[str, ...]
+    shots: tuple[Shot, ...]
+    audio_directives: tuple[AudioDirective, ...]
+    line_number: int
+    continuation: bool = False
+    mouth_performances: tuple[MouthPerformance, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class EMDDocument:
+    subjects: tuple[Subject, ...]
+    retention: tuple[RetentionDirective, ...]
+    common_prompt: tuple[tuple[str, tuple[str, ...]], ...]
+    scenes: tuple[Scene, ...]
+    scene_setting: SceneSetting | None = None
+    audio_activity: AudioActivity | None = None
+
+    def common_prompt_dict(self) -> dict[str, tuple[str, ...]]:
+        return dict(self.common_prompt)

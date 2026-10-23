@@ -1,0 +1,70 @@
+{
+  "schema": "VCD_EXECUTION_V1",
+  "project_id": "homecoming",
+  "scene_emd_sha256": "41f6ab42b7e752c86978d5066315c031739c236d1b7c1a1b593e3652a4a0179b",
+  "plan_sha256": "9a76d31b363b6b98a9b9686ad82a1d4a3608452a8ead0805f6b79c7a18c9c776",
+  "runtime_contract": {
+    "contract_id": "VCD_CL_GUIDE_24FPS_V1",
+    "context_loop_version": "0.7.3",
+    "context_loop_commit": "3c2af7308b9f709f9e10795332181f41597757ee",
+    "source_fingerprint": "a18a2bd0fb994e719e96f4dc651a12f46509fb0198dde6a7b93114064afa6751",
+    "fps": 24,
+    "output_sample_rate": 48000,
+    "compiler_version": "0.1.0"
+  },
+  "assets": [],
+  "segments": [
+    {
+      "id": "sc_return_a",
+      "scene_id": "sc_return_a",
+      "index": 1,
+      "planned_start_ms": 0,
+      "planned_end_ms": 10000,
+      "start_frame": 0,
+      "end_frame": 243,
+      "raw_length": 243,
+      "context_frames": 0,
+      "audio_context_frames": 0,
+      "local_subjects": [
+        {
+          "actor_id": "hero",
+          "subject_number": 1
+        }
+      ],
+      "reference_bindings": [],
+      "event_timing": [
+        {
+          "event_id": "ev_walk",
+          "planned_start_ms": 0,
+          "planned_end_ms": 10000,
+          "raw_start_frame": 0,
+          "raw_end_frame": 240,
+          "output_start_frame": 0,
+          "output_end_frame": 240
+        },
+        {
+          "event_id": "dlg_home",
+          "planned_start_ms": 5000,
+          "planned_end_ms": 7000,
+          "raw_start_frame": 120,
+          "raw_end_frame": 168,
+          "output_start_frame": 120,
+          "output_end_frame": 168
+        }
+      ],
+      "audio": {
+        "vocal": "dialogue",
+        "bgm": "none",
+        "bgm_description": null,
+        "ambience": "none",
+        "ambience_description": null,
+        "effects": "none",
+        "effects_description": null,
+        "reference_audio": []
+      },
+      "audio_output": "generated"
+    }
+  ],
+  "reference_schedule": [],
+  "output_audio": "generated"
+}

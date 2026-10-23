@@ -1,0 +1,25 @@
+{
+  "schema": "VCD_ENHANCED_STORY_V1",
+  "project_id": "homecoming",
+  "scenario_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "intent": "故郷へ戻った少女の静かな導入。",
+  "beats": [
+    {
+      "id": "return",
+      "intent": "帰郷を見せる。",
+      "required_events": [
+        {
+          "id": "req_exit",
+          "text": "駅から出る。",
+          "source": {
+            "first_line": 1,
+            "last_line": 1,
+            "document": "scenario"
+          },
+          "beat_id": "return"
+        }
+      ]
+    }
+  ],
+  "constraints": []
+}

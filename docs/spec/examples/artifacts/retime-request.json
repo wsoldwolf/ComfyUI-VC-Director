@@ -1,0 +1,168 @@
+{
+  "schema": "VCD_LLM_REQUEST_V1",
+  "request_id": "retime_request_a",
+  "stage": "retime",
+  "targets": [
+    {
+      "slot": 1,
+      "target_id": "sc_return_a"
+    }
+  ],
+  "retry": "initial",
+  "errors": [],
+  "payload": {
+    "document": {
+      "schema": "VCD_SCENE_DOCUMENT_V1",
+      "scenario_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "duration_ms": 10000,
+      "project_id": "homecoming",
+      "actors": [
+        {
+          "id": "hero",
+          "name": "少女",
+          "description": "赤いコートを着た旅人。",
+          "image_asset_id": "hero_image",
+          "video_asset_id": null,
+          "voice_asset_id": null
+        }
+      ],
+      "backgrounds": [
+        {
+          "id": "station",
+          "description": "夕暮れの駅前。",
+          "image_asset_id": null
+        }
+      ],
+      "beats": [
+        {
+          "id": "return",
+          "text": "少女が駅を出て町を見渡す。",
+          "actor_ids": [
+            "hero"
+          ],
+          "background_id": "station",
+          "source": {
+            "first_line": 1,
+            "last_line": 1,
+            "document": "scenario"
+          },
+          "dialogues": [],
+          "audio": {
+            "vocal": "none",
+            "bgm": "none",
+            "bgm_description": null,
+            "ambience": "none",
+            "ambience_description": null,
+            "effects": "none",
+            "effects_description": null,
+            "reference_audio": []
+          }
+        }
+      ],
+      "constraints": [],
+      "audio": {
+        "vocal": "none",
+        "bgm": "none",
+        "bgm_description": null,
+        "ambience": "none",
+        "ambience_description": null,
+        "effects": "none",
+        "effects_description": null,
+        "reference_audio": []
+      },
+      "scenes": [
+        {
+          "id": "sc_return_a",
+          "beat_id": "return",
+          "start_ms": 0,
+          "end_ms": 10000,
+          "actor_ids": [
+            "hero"
+          ],
+          "background_id": "station",
+          "transition": "cut",
+          "locked": [],
+          "subject_descriptions": [
+            {
+              "actor_id": "hero",
+              "text": "赤いコートを着た旅人。"
+            }
+          ],
+          "summary": "少女が駅を出て町を見渡す。",
+          "retention": [
+            {
+              "actor_id": "hero",
+              "mode": "fully_preserved"
+            }
+          ],
+          "initial_state": [
+            {
+              "owner_id": "hero",
+              "key": "position",
+              "value": "駅出口"
+            }
+          ],
+          "terminal_state": [
+            {
+              "owner_id": "hero",
+              "key": "position",
+              "value": "駅前"
+            }
+          ],
+          "audio": {
+            "vocal": "none",
+            "bgm": "none",
+            "bgm_description": null,
+            "ambience": "none",
+            "ambience_description": null,
+            "effects": "none",
+            "effects_description": null,
+            "reference_audio": []
+          },
+          "shots": [
+            {
+              "id": "sh_exit",
+              "start_ms": 0,
+              "end_ms": 10000,
+              "events": [
+                {
+                  "id": "ev_walk",
+                  "kind": "action",
+                  "start_ms": 0,
+                  "end_ms": 10000,
+                  "actor_id": "hero",
+                  "text": "駅を出て通りへ視線を向ける。",
+                  "dialogue_id": null,
+                  "language": null
+                }
+              ]
+            }
+          ],
+          "sound_events": [],
+          "required_event_ids": [
+            "req_exit"
+          ],
+          "depends_on": []
+        }
+      ],
+      "required_events": [
+        {
+          "id": "req_exit",
+          "beat_id": "return",
+          "text": "駅から出る。",
+          "source": {
+            "first_line": 1,
+            "last_line": 1,
+            "document": "scenario"
+          }
+        }
+      ],
+      "direction": [
+        "静かな短編映画。"
+      ]
+    },
+    "changed_scene_ids": [
+      "sc_return_a"
+    ]
+  }
+}

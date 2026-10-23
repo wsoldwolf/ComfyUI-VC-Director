@@ -1,0 +1,2135 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "VC-Director V1 draft 0.3 artifacts and stage payloads",
+  "description": "Structural contracts; reference, temporal, speech and policy invariants require semantic validation.",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/scenario"
+    },
+    {
+      "$ref": "#/$defs/enhanced_story"
+    },
+    {
+      "$ref": "#/$defs/scene_document"
+    },
+    {
+      "$ref": "#/$defs/execution"
+    },
+    {
+      "$ref": "#/$defs/enhance_request"
+    },
+    {
+      "$ref": "#/$defs/enhance_response"
+    },
+    {
+      "$ref": "#/$defs/outline_request"
+    },
+    {
+      "$ref": "#/$defs/outline_response"
+    },
+    {
+      "$ref": "#/$defs/detail_request"
+    },
+    {
+      "$ref": "#/$defs/detail_response"
+    },
+    {
+      "$ref": "#/$defs/retime_request"
+    },
+    {
+      "$ref": "#/$defs/retime_response"
+    }
+  ],
+  "$defs": {
+    "source_span": {
+      "type": "object",
+      "properties": {
+        "document": {
+          "enum": [
+            "scenario",
+            "scene"
+          ]
+        },
+        "first_line": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "last_line": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "document",
+        "first_line",
+        "last_line"
+      ],
+      "additionalProperties": false
+    },
+    "actor": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "image_asset_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "video_asset_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "voice_asset_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "image_asset_id",
+        "video_asset_id",
+        "voice_asset_id"
+      ],
+      "additionalProperties": false
+    },
+    "background": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "image_asset_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "description",
+        "image_asset_id"
+      ],
+      "additionalProperties": false
+    },
+    "constraint": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "$ref": "#/$defs/source_span"
+        }
+      },
+      "required": [
+        "id",
+        "text",
+        "source"
+      ],
+      "additionalProperties": false
+    },
+    "audio_reference": {
+      "type": "object",
+      "properties": {
+        "asset_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "purpose": {
+          "enum": [
+            "music",
+            "ambience",
+            "effects"
+          ]
+        }
+      },
+      "required": [
+        "asset_id",
+        "purpose"
+      ],
+      "additionalProperties": false
+    },
+    "audio_policy": {
+      "type": "object",
+      "properties": {
+        "vocal": {
+          "enum": [
+            "none",
+            "dialogue"
+          ]
+        },
+        "bgm": {
+          "enum": [
+            "none",
+            "generate"
+          ]
+        },
+        "bgm_description": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "ambience": {
+          "enum": [
+            "none",
+            "explicit",
+            "expand"
+          ]
+        },
+        "ambience_description": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "effects": {
+          "enum": [
+            "none",
+            "explicit",
+            "expand"
+          ]
+        },
+        "effects_description": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reference_audio": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/audio_reference"
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "vocal",
+        "bgm",
+        "bgm_description",
+        "ambience",
+        "ambience_description",
+        "effects",
+        "effects_description",
+        "reference_audio"
+      ],
+      "additionalProperties": false
+    },
+    "dialogue": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "actor_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "language": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "$ref": "#/$defs/source_span"
+        }
+      },
+      "required": [
+        "id",
+        "actor_id",
+        "language",
+        "text",
+        "source"
+      ],
+      "additionalProperties": false
+    },
+    "beat": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "actor_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "background_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "source": {
+          "$ref": "#/$defs/source_span"
+        },
+        "dialogues": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/dialogue"
+          },
+          "minItems": 0
+        },
+        "audio": {
+          "$ref": "#/$defs/audio_policy"
+        }
+      },
+      "required": [
+        "id",
+        "text",
+        "actor_ids",
+        "background_id",
+        "source",
+        "dialogues",
+        "audio"
+      ],
+      "additionalProperties": false
+    },
+    "required_event": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "beat_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "$ref": "#/$defs/source_span"
+        }
+      },
+      "required": [
+        "id",
+        "beat_id",
+        "text",
+        "source"
+      ],
+      "additionalProperties": false
+    },
+    "enhanced_beat": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "intent": {
+          "type": "string",
+          "minLength": 1
+        },
+        "required_events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/required_event"
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "id",
+        "intent",
+        "required_events"
+      ],
+      "additionalProperties": false
+    },
+    "state": {
+      "type": "object",
+      "properties": {
+        "owner_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "key": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "value": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "owner_id",
+        "key",
+        "value"
+      ],
+      "additionalProperties": false
+    },
+    "event": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "kind": {
+          "enum": [
+            "action",
+            "camera",
+            "dialogue"
+          ]
+        },
+        "start_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end_ms": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "actor_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "dialogue_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "language": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "start_ms",
+        "end_ms",
+        "actor_id",
+        "text",
+        "dialogue_id",
+        "language"
+      ],
+      "additionalProperties": false
+    },
+    "shot": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "start_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end_ms": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/event"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "id",
+        "start_ms",
+        "end_ms",
+        "events"
+      ],
+      "additionalProperties": false
+    },
+    "sound_event": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "kind": {
+          "enum": [
+            "effect",
+            "ambience"
+          ]
+        },
+        "start_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end_ms": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "trigger_event_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "start_ms",
+        "end_ms",
+        "trigger_event_id",
+        "text"
+      ],
+      "additionalProperties": false
+    },
+    "scene_outline": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "beat_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "start_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end_ms": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "actor_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "background_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "transition": {
+          "enum": [
+            "cut",
+            "continue"
+          ]
+        },
+        "depends_on": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "locked": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "structure",
+              "timing",
+              "content"
+            ]
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "required_event_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "initial_state": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/state"
+          },
+          "minItems": 0
+        },
+        "terminal_state": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/state"
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "id",
+        "beat_id",
+        "start_ms",
+        "end_ms",
+        "actor_ids",
+        "background_id",
+        "transition",
+        "depends_on",
+        "locked",
+        "required_event_ids",
+        "initial_state",
+        "terminal_state"
+      ],
+      "additionalProperties": false
+    },
+    "scene": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "beat_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "start_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end_ms": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "actor_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "background_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "transition": {
+          "enum": [
+            "cut",
+            "continue"
+          ]
+        },
+        "depends_on": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "locked": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "structure",
+              "timing",
+              "content"
+            ]
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "required_event_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "minItems": 0,
+          "uniqueItems": true
+        },
+        "initial_state": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/state"
+          },
+          "minItems": 0
+        },
+        "terminal_state": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/state"
+          },
+          "minItems": 0
+        },
+        "subject_descriptions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "actor_id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "text": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "required": [
+              "actor_id",
+              "text"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "retention": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "actor_id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "mode": {
+                "enum": [
+                  "fully_preserved",
+                  "partially_preserved"
+                ]
+              }
+            },
+            "required": [
+              "actor_id",
+              "mode"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0
+        },
+        "audio": {
+          "$ref": "#/$defs/audio_policy"
+        },
+        "shots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/shot"
+          },
+          "minItems": 1
+        },
+        "sound_events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/sound_event"
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "id",
+        "beat_id",
+        "start_ms",
+        "end_ms",
+        "actor_ids",
+        "background_id",
+        "transition",
+        "depends_on",
+        "locked",
+        "required_event_ids",
+        "initial_state",
+        "terminal_state",
+        "subject_descriptions",
+        "summary",
+        "retention",
+        "audio",
+        "shots",
+        "sound_events"
+      ],
+      "additionalProperties": false
+    },
+    "asset": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "kind": {
+          "enum": [
+            "image",
+            "audio",
+            "video"
+          ]
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "locator": {
+          "type": "string",
+          "minLength": 1
+        },
+        "sample_rate": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sample_count": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "fps": {
+          "anyOf": [
+            {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "frame_count": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "paired_audio_enabled": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "kind",
+        "sha256",
+        "locator",
+        "sample_rate",
+        "sample_count",
+        "fps",
+        "frame_count",
+        "paired_audio_enabled"
+      ],
+      "additionalProperties": false
+    },
+    "reference_binding": {
+      "type": "object",
+      "properties": {
+        "asset_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "role": {
+          "enum": [
+            "identity",
+            "background",
+            "motion",
+            "voice",
+            "music",
+            "ambience",
+            "effects",
+            "video_audio"
+          ]
+        },
+        "token": {
+          "type": "string",
+          "pattern": "^<(Picture|Video|Audio) [1-9]>$"
+        }
+      },
+      "required": [
+        "asset_id",
+        "role",
+        "token"
+      ],
+      "additionalProperties": false
+    },
+    "event_timing": {
+      "type": "object",
+      "properties": {
+        "event_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "planned_start_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "planned_end_ms": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "raw_start_frame": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "raw_end_frame": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "output_start_frame": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "output_end_frame": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "event_id",
+        "planned_start_ms",
+        "planned_end_ms",
+        "raw_start_frame",
+        "raw_end_frame",
+        "output_start_frame",
+        "output_end_frame"
+      ],
+      "additionalProperties": false
+    },
+    "segment": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "scene_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "planned_start_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "planned_end_ms": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "start_frame": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end_frame": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "raw_length": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "context_frames": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "audio_context_frames": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "local_subjects": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "actor_id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "subject_number": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 4
+              }
+            },
+            "required": [
+              "actor_id",
+              "subject_number"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0
+        },
+        "reference_bindings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/reference_binding"
+          },
+          "minItems": 0
+        },
+        "event_timing": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/event_timing"
+          },
+          "minItems": 0
+        },
+        "audio": {
+          "$ref": "#/$defs/audio_policy"
+        },
+        "audio_output": {
+          "enum": [
+            "generated",
+            "silence"
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "scene_id",
+        "index",
+        "planned_start_ms",
+        "planned_end_ms",
+        "start_frame",
+        "end_frame",
+        "raw_length",
+        "context_frames",
+        "audio_context_frames",
+        "local_subjects",
+        "reference_bindings",
+        "event_timing",
+        "audio",
+        "audio_output"
+      ],
+      "additionalProperties": false
+    },
+    "reference_schedule": {
+      "type": "object",
+      "properties": {
+        "asset_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "segment_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "role": {
+          "enum": [
+            "identity",
+            "background",
+            "motion",
+            "voice",
+            "music",
+            "ambience",
+            "effects",
+            "video_audio"
+          ]
+        }
+      },
+      "required": [
+        "asset_id",
+        "segment_ids",
+        "role"
+      ],
+      "additionalProperties": false
+    },
+    "runtime_contract": {
+      "type": "object",
+      "properties": {
+        "contract_id": {
+          "const": "VCD_CL_GUIDE_24FPS_V1"
+        },
+        "context_loop_version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "context_loop_commit": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{40}$"
+        },
+        "source_fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "fps": {
+          "const": 24
+        },
+        "output_sample_rate": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "compiler_version": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "contract_id",
+        "context_loop_version",
+        "context_loop_commit",
+        "source_fingerprint",
+        "fps",
+        "output_sample_rate",
+        "compiler_version"
+      ],
+      "additionalProperties": false
+    },
+    "scenario": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "VCD_SCENARIO_V1"
+        },
+        "source_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "duration_ms": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "project_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "actors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/actor"
+          },
+          "minItems": 0
+        },
+        "backgrounds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/background"
+          },
+          "minItems": 1
+        },
+        "beats": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/beat"
+          },
+          "minItems": 1
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/constraint"
+          },
+          "minItems": 0
+        },
+        "audio": {
+          "$ref": "#/$defs/audio_policy"
+        },
+        "direction": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "schema",
+        "source_sha256",
+        "duration_ms",
+        "project_id",
+        "actors",
+        "backgrounds",
+        "beats",
+        "constraints",
+        "audio",
+        "direction"
+      ],
+      "additionalProperties": false
+    },
+    "enhanced_story": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "VCD_ENHANCED_STORY_V1"
+        },
+        "project_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "scenario_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "intent": {
+          "type": "string",
+          "minLength": 1
+        },
+        "beats": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/enhanced_beat"
+          },
+          "minItems": 1
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/constraint"
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "schema",
+        "project_id",
+        "scenario_sha256",
+        "intent",
+        "beats",
+        "constraints"
+      ],
+      "additionalProperties": false
+    },
+    "scene_document": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "VCD_SCENE_DOCUMENT_V1"
+        },
+        "scenario_sha256": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "duration_ms": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "project_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "actors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/actor"
+          },
+          "minItems": 0
+        },
+        "backgrounds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/background"
+          },
+          "minItems": 1
+        },
+        "beats": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/beat"
+          },
+          "minItems": 1
+        },
+        "constraints": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/constraint"
+          },
+          "minItems": 0
+        },
+        "audio": {
+          "$ref": "#/$defs/audio_policy"
+        },
+        "direction": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        },
+        "required_events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/required_event"
+          },
+          "minItems": 0
+        },
+        "scenes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/scene"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "schema",
+        "scenario_sha256",
+        "duration_ms",
+        "project_id",
+        "actors",
+        "backgrounds",
+        "beats",
+        "constraints",
+        "audio",
+        "direction",
+        "required_events",
+        "scenes"
+      ],
+      "additionalProperties": false
+    },
+    "execution": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "VCD_EXECUTION_V1"
+        },
+        "project_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "scene_emd_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "plan_sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "runtime_contract": {
+          "$ref": "#/$defs/runtime_contract"
+        },
+        "assets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/asset"
+          },
+          "minItems": 0
+        },
+        "segments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/segment"
+          },
+          "minItems": 1
+        },
+        "reference_schedule": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/reference_schedule"
+          },
+          "minItems": 0
+        },
+        "output_audio": {
+          "const": "generated"
+        }
+      },
+      "required": [
+        "schema",
+        "project_id",
+        "scene_emd_sha256",
+        "plan_sha256",
+        "runtime_contract",
+        "assets",
+        "segments",
+        "reference_schedule",
+        "output_audio"
+      ],
+      "additionalProperties": false
+    },
+    "image_fact": {
+      "type": "object",
+      "properties": {
+        "entity_kind": {
+          "enum": [
+            "actor",
+            "background"
+          ]
+        },
+        "entity_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "entity_kind",
+        "entity_id",
+        "text"
+      ],
+      "additionalProperties": false
+    },
+    "time_range": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "start_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end_ms": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "id",
+        "start_ms",
+        "end_ms"
+      ],
+      "additionalProperties": false
+    },
+    "shot_timing": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "start_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end_ms": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/time_range"
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "id",
+        "start_ms",
+        "end_ms",
+        "events"
+      ],
+      "additionalProperties": false
+    },
+    "timing_patch": {
+      "type": "object",
+      "properties": {
+        "scene_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "start_ms": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end_ms": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "shots": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/shot_timing"
+          },
+          "minItems": 1
+        },
+        "sound_events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/time_range"
+          },
+          "minItems": 0
+        }
+      },
+      "required": [
+        "scene_id",
+        "start_ms",
+        "end_ms",
+        "shots",
+        "sound_events"
+      ],
+      "additionalProperties": false
+    },
+    "target": {
+      "type": "object",
+      "properties": {
+        "slot": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "target_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        }
+      },
+      "required": [
+        "slot",
+        "target_id"
+      ],
+      "additionalProperties": false
+    },
+    "issue": {
+      "type": "object",
+      "properties": {
+        "target_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "code": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "target_id",
+        "path",
+        "code",
+        "message"
+      ],
+      "additionalProperties": false
+    },
+    "enhance_request": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "VCD_LLM_REQUEST_V1"
+        },
+        "request_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "stage": {
+          "const": "enhance"
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/target"
+          },
+          "minItems": 1
+        },
+        "retry": {
+          "enum": [
+            "initial",
+            "repair",
+            "isolated"
+          ]
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/issue"
+          },
+          "minItems": 0
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "scenario": {
+              "$ref": "#/$defs/scenario"
+            },
+            "image_facts": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/image_fact"
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "scenario",
+            "image_facts"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schema",
+        "request_id",
+        "stage",
+        "targets",
+        "retry",
+        "errors",
+        "payload"
+      ],
+      "additionalProperties": false
+    },
+    "enhance_response": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "VCD_LLM_RESPONSE_V1"
+        },
+        "request_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "stage": {
+          "const": "enhance"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_type": {
+                "const": "ENHANCED"
+              },
+              "slot": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "payload": {
+                "$ref": "#/$defs/enhanced_story"
+              }
+            },
+            "required": [
+              "record_type",
+              "slot",
+              "payload"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "schema",
+        "request_id",
+        "stage",
+        "records"
+      ],
+      "additionalProperties": false
+    },
+    "outline_request": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "VCD_LLM_REQUEST_V1"
+        },
+        "request_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "stage": {
+          "const": "outline"
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/target"
+          },
+          "minItems": 1
+        },
+        "retry": {
+          "enum": [
+            "initial",
+            "repair",
+            "isolated"
+          ]
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/issue"
+          },
+          "minItems": 0
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "scenario": {
+              "$ref": "#/$defs/scenario"
+            },
+            "enhanced": {
+              "$ref": "#/$defs/enhanced_story"
+            },
+            "accepted_outlines": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/scene_outline"
+              },
+              "minItems": 0
+            }
+          },
+          "required": [
+            "scenario",
+            "enhanced",
+            "accepted_outlines"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schema",
+        "request_id",
+        "stage",
+        "targets",
+        "retry",
+        "errors",
+        "payload"
+      ],
+      "additionalProperties": false
+    },
+    "outline_response": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "VCD_LLM_RESPONSE_V1"
+        },
+        "request_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "stage": {
+          "const": "outline"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_type": {
+                "const": "SCENES"
+              },
+              "slot": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "payload": {
+                "type": "object",
+                "properties": {
+                  "scenes": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/scene_outline"
+                    },
+                    "minItems": 1
+                  }
+                },
+                "required": [
+                  "scenes"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "record_type",
+              "slot",
+              "payload"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "schema",
+        "request_id",
+        "stage",
+        "records"
+      ],
+      "additionalProperties": false
+    },
+    "detail_request": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "VCD_LLM_REQUEST_V1"
+        },
+        "request_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "stage": {
+          "const": "detail"
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/target"
+          },
+          "minItems": 1
+        },
+        "retry": {
+          "enum": [
+            "initial",
+            "repair",
+            "isolated"
+          ]
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/issue"
+          },
+          "minItems": 0
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "scenario": {
+              "$ref": "#/$defs/scenario"
+            },
+            "enhanced": {
+              "$ref": "#/$defs/enhanced_story"
+            },
+            "outline": {
+              "$ref": "#/$defs/scene_outline"
+            },
+            "previous_scenes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/scene"
+              },
+              "minItems": 0
+            },
+            "locked_scene": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/scene"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "scenario",
+            "enhanced",
+            "outline",
+            "previous_scenes",
+            "locked_scene"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schema",
+        "request_id",
+        "stage",
+        "targets",
+        "retry",
+        "errors",
+        "payload"
+      ],
+      "additionalProperties": false
+    },
+    "detail_response": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "VCD_LLM_RESPONSE_V1"
+        },
+        "request_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "stage": {
+          "const": "detail"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_type": {
+                "const": "DETAIL"
+              },
+              "slot": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "payload": {
+                "$ref": "#/$defs/scene"
+              }
+            },
+            "required": [
+              "record_type",
+              "slot",
+              "payload"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "schema",
+        "request_id",
+        "stage",
+        "records"
+      ],
+      "additionalProperties": false
+    },
+    "retime_request": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "VCD_LLM_REQUEST_V1"
+        },
+        "request_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "stage": {
+          "const": "retime"
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/target"
+          },
+          "minItems": 1
+        },
+        "retry": {
+          "enum": [
+            "initial",
+            "repair",
+            "isolated"
+          ]
+        },
+        "errors": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/issue"
+          },
+          "minItems": 0
+        },
+        "payload": {
+          "type": "object",
+          "properties": {
+            "document": {
+              "$ref": "#/$defs/scene_document"
+            },
+            "changed_scene_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            }
+          },
+          "required": [
+            "document",
+            "changed_scene_ids"
+          ],
+          "additionalProperties": false
+        }
+      },
+      "required": [
+        "schema",
+        "request_id",
+        "stage",
+        "targets",
+        "retry",
+        "errors",
+        "payload"
+      ],
+      "additionalProperties": false
+    },
+    "retime_response": {
+      "type": "object",
+      "properties": {
+        "schema": {
+          "const": "VCD_LLM_RESPONSE_V1"
+        },
+        "request_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "stage": {
+          "const": "retime"
+        },
+        "records": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "record_type": {
+                "const": "TIMING"
+              },
+              "slot": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "payload": {
+                "$ref": "#/$defs/timing_patch"
+              }
+            },
+            "required": [
+              "record_type",
+              "slot",
+              "payload"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "schema",
+        "request_id",
+        "stage",
+        "records"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

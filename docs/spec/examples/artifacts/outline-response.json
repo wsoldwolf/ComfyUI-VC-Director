@@ -1,0 +1,45 @@
+{
+  "schema": "VCD_LLM_RESPONSE_V1",
+  "request_id": "outline_request_a",
+  "stage": "outline",
+  "records": [
+    {
+      "record_type": "SCENES",
+      "slot": 1,
+      "payload": {
+        "scenes": [
+          {
+            "id": "sc_return_a",
+            "beat_id": "return",
+            "start_ms": 0,
+            "end_ms": 10000,
+            "actor_ids": [
+              "hero"
+            ],
+            "background_id": "station",
+            "transition": "cut",
+            "depends_on": [],
+            "locked": [],
+            "required_event_ids": [
+              "req_exit"
+            ],
+            "initial_state": [
+              {
+                "owner_id": "hero",
+                "key": "position",
+                "value": "駅出口"
+              }
+            ],
+            "terminal_state": [
+              {
+                "owner_id": "hero",
+                "key": "position",
+                "value": "駅前"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

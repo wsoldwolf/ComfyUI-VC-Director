@@ -1,0 +1,63 @@
+{
+  "schema": "VCD_SCENARIO_V1",
+  "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "duration_ms": 10000,
+  "project_id": "homecoming",
+  "actors": [
+    {
+      "id": "hero",
+      "name": "少女",
+      "description": "赤いコートを着た旅人。",
+      "image_asset_id": "hero_image",
+      "video_asset_id": null,
+      "voice_asset_id": null
+    }
+  ],
+  "backgrounds": [
+    {
+      "id": "station",
+      "description": "夕暮れの駅前。",
+      "image_asset_id": null
+    }
+  ],
+  "beats": [
+    {
+      "id": "return",
+      "text": "少女が駅を出て町を見渡す。",
+      "actor_ids": [
+        "hero"
+      ],
+      "background_id": "station",
+      "source": {
+        "first_line": 1,
+        "last_line": 1,
+        "document": "scenario"
+      },
+      "dialogues": [],
+      "audio": {
+        "vocal": "none",
+        "bgm": "none",
+        "bgm_description": null,
+        "ambience": "none",
+        "ambience_description": null,
+        "effects": "none",
+        "effects_description": null,
+        "reference_audio": []
+      }
+    }
+  ],
+  "constraints": [],
+  "audio": {
+    "vocal": "none",
+    "bgm": "none",
+    "bgm_description": null,
+    "ambience": "none",
+    "ambience_description": null,
+    "effects": "none",
+    "effects_description": null,
+    "reference_audio": []
+  },
+  "direction": [
+    "静かな短編映画。"
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "schema": "VCD_LLM_RESPONSE_V1",
+  "request_id": "retime_request_a",
+  "stage": "retime",
+  "records": [
+    {
+      "record_type": "TIMING",
+      "slot": 1,
+      "payload": {
+        "scene_id": "sc_return_a",
+        "start_ms": 0,
+        "end_ms": 10000,
+        "shots": [
+          {
+            "id": "sh_exit",
+            "start_ms": 0,
+            "end_ms": 10000,
+            "events": [
+              {
+                "id": "ev_walk",
+                "start_ms": 0,
+                "end_ms": 10000
+              }
+            ]
+          }
+        ],
+        "sound_events": []
+      }
+    }
+  ]
+}

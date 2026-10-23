@@ -1,0 +1,75 @@
+# 形式
+* schema: VCD_SCENE_EMD_V1
+
+# 作品
+* id: minimal
+* 尺: 00:10.000
+* 元シナリオhash: なし
+* 方針: Quiet cinema.
+* 発声: 指定台詞のみ
+* BGM: なし
+* 環境音: なし
+* 効果音: なし
+* 音声参照: なし
+
+# 人物 @hero
+* 名前: 少女
+* 特徴: A traveler wearing a red coat.
+* 画像: なし
+* 動画: なし
+* 声質音声: なし
+
+# 背景 station
+* 画像: なし
+* 情景: A station square at dusk.
+
+# 展開定義 return
+* 出演: @hero
+* 背景: station
+* 原文: 少女が駅を出て町を見渡す。
+* 台詞 dlg_home: @hero | 「ただいま。 @hero @recipient」
+* 発声: 指定台詞のみ
+* BGM: なし
+* 環境音: なし
+* 効果音: なし
+* 音声参照: なし
+* 必須出来事 req_exit: 駅から出る。
+
+# 出典
+* return: scenario:1-1
+* req_exit: scenario:1-1
+* dlg_home: scenario:1-1
+
+# Scene sc_return_a 00:00.000 --> 00:10.000
+* 展開: return
+* 出演: @hero
+* 背景: station
+* 接続: cut
+* 依存: なし
+* 固定: なし
+* 必須出来事: req_exit
+* 開始状態 @hero.position: 駅出口
+* 終了状態 @hero.position: 駅前
+
+## subject_definitions
+* @hero: A traveler wearing a red coat.
+
+## summary
+* The traveler returns to town.
+
+## retention_analysis
+* @hero: fully_preserved
+
+## detailed_description
+### Shot sh_exit 00:00.000 --> 00:10.000
+* ACTION ev_walk 00:00.000 --> 00:10.000 | @hero | Walks out of the station and looks at the street.
+* DIALOGUE dlg_home 00:05.000 --> 00:07.000 | @hero | 「ただいま。 @hero @recipient」
+
+## overall_soundscape
+* 発声: 指定台詞のみ
+* 環境音: なし
+* 効果音: なし
+* 音声参照: なし
+
+## non_diegetic_music
+* BGM: なし

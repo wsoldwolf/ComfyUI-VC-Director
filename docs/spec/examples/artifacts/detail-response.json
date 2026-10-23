@@ -1,0 +1,84 @@
+{
+  "schema": "VCD_LLM_RESPONSE_V1",
+  "request_id": "detail_request_a",
+  "stage": "detail",
+  "records": [
+    {
+      "record_type": "DETAIL",
+      "slot": 1,
+      "payload": {
+        "id": "sc_return_a",
+        "beat_id": "return",
+        "start_ms": 0,
+        "end_ms": 10000,
+        "actor_ids": [
+          "hero"
+        ],
+        "background_id": "station",
+        "transition": "cut",
+        "locked": [],
+        "subject_descriptions": [
+          {
+            "actor_id": "hero",
+            "text": "赤いコートを着た旅人。"
+          }
+        ],
+        "summary": "少女が駅を出て町を見渡す。",
+        "retention": [
+          {
+            "actor_id": "hero",
+            "mode": "fully_preserved"
+          }
+        ],
+        "initial_state": [
+          {
+            "owner_id": "hero",
+            "key": "position",
+            "value": "駅出口"
+          }
+        ],
+        "terminal_state": [
+          {
+            "owner_id": "hero",
+            "key": "position",
+            "value": "駅前"
+          }
+        ],
+        "audio": {
+          "vocal": "none",
+          "bgm": "none",
+          "bgm_description": null,
+          "ambience": "none",
+          "ambience_description": null,
+          "effects": "none",
+          "effects_description": null,
+          "reference_audio": []
+        },
+        "shots": [
+          {
+            "id": "sh_exit",
+            "start_ms": 0,
+            "end_ms": 10000,
+            "events": [
+              {
+                "id": "ev_walk",
+                "kind": "action",
+                "start_ms": 0,
+                "end_ms": 10000,
+                "actor_id": "hero",
+                "text": "駅を出て通りへ視線を向ける。",
+                "dialogue_id": null,
+                "language": null
+              }
+            ]
+          }
+        ],
+        "sound_events": [],
+        "required_event_ids": [
+          "req_exit"
+        ],
+        "depends_on": []
+      }
+    }
+  ]
+}

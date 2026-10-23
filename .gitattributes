@@ -1,0 +1,9 @@
+* text=auto
+
+# Integrated source records use stable LF bytes; templates retain original bytes.
+*.py text eol=lf
+*.txt text eol=lf
+*.json text eol=lf
+tools/workflow_templates/*.json -text
+
+*.png binary
