@@ -114,8 +114,9 @@
       "source": "core/compiler/whole_field.py",
       "source_sha256": "8b3a09c2af59eda8b12488352c82b644b03f42b49a4f0f60873b25a5b433e9eb",
       "target": "core/compiler/whole_field.py",
-      "status": "integrated",
-      "integrated_sha256": "9023dfe1d3c5bf53e86f4bc319cfdb95b76226ab355ef53f5584858161d16ee4"
+      "status": "adapted",
+      "integrated_sha256": "7a85b53ba77f916914ad5e06b39b6478520137cb73dcdfad8965ab0ec2f9dd8e",
+      "note": "Integrated whole-field translation with optional semantic-validation callback inside the existing two-attempt repair loop and request diagnostics; source hash retained."
     },
     {
       "source": "core/emd/__init__.py",

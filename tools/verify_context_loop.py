@@ -18,13 +18,18 @@ from vc_director.nodes import NODE_CLASS_MAPPINGS
 from vc_director.core.h3_contract import verify_runtime
 
 
-def verify(runtime_root):
+def verify(runtime_root, object_info=None):
     verify_runtime(runtime_root)
     path = Path(runtime_root) / "tools/workflow_schema.py"
     spec = importlib.util.spec_from_file_location("vcd_runtime_schema", path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     schemas = module.load_schemas()
+    # Sanitized registration snapshot for MV's external model/acceleration stack.
+    schemas.update(json.loads((ROOT / "tools/workflow_templates/video_model_schemas.json").read_text(encoding="utf-8")))
+    schemas.update(json.loads((ROOT / "tools/workflow_templates/resolution_selector_schema.json").read_text(encoding="utf-8")))
+    live_schemas = json.loads(Path(object_info).read_text(encoding="utf-8")) if object_info else {}
+    schemas.update(live_schemas)
     for name, cls in NODE_CLASS_MAPPINGS.items():
         if name == "VCDirectorImageToSubjectEMD":
             continue  # GGUF inventory is not needed to verify this workflow.
@@ -52,6 +57,23 @@ def verify(runtime_root):
         assert fields[name][0] == type_, (dest["type"], name, fields[name][0], type_)
         assert dest["inputs"][target_slot]["link"] == link_id
         assert link_id in origin["outputs"][slot]["links"]
+    model_types = {n["type"] for n in json.loads((ROOT / "tools/workflow_templates/mv_video_model_stack.json").read_text(encoding="utf-8"))}
+    model_types.add("ResolutionSelector")
+    for node in nodes.values():
+        if node["type"] not in model_types:
+            continue
+        if node["type"] == "VAELoader":
+            continue  # Model inventory requires a full live snapshot for this stock node.
+        schema = schemas[node["type"]]
+        fields = dict(module.widget_fields(schema, node.get("widgets_values_named", {})))
+        assert len(fields) == len(node["widgets_values"]), (node["type"], list(fields))
+        values = dict(zip(fields, node["widgets_values"]))
+        fields = dict(module.widget_fields(schema, values))
+        for name, spec in fields.items():
+            # Snapshot inventories are sanitized; a supplied live snapshot checks actual files.
+            if node["type"] not in live_schemas and name in {"base_model", "overlay_model", "lora_name", "clip_name"}:
+                continue
+            module.validate_value(values[name], spec, f"{node['type']}.{name}")
     assert all(n["mode"] == 2 for n in nodes.values() if n["properties"].get("vcd_group") == "video")
     assert all(n["mode"] == 0 for n in nodes.values() if n["properties"].get("vcd_group") == "language")
     chain = sys.modules["_h3_release_workflow_schema.chain_nodes"]
@@ -97,4 +119,6 @@ def verify(runtime_root):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--context-loop-root", type=Path, required=True)
-    verify(parser.parse_args().context_loop_root)
+    parser.add_argument("--object-info", type=Path, help="Optional live /object_info snapshot, including installed model choices")
+    args = parser.parse_args()
+    verify(args.context_loop_root, args.object_info)

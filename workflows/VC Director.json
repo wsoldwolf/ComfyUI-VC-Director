@@ -1,42 +1,156 @@
 {
   "id": "f97af838-5222-5864-8ec8-15d657333fdb",
   "revision": 0,
-  "last_node_id": 34,
-  "last_link_id": 61,
+  "last_node_id": 43,
+  "last_link_id": 72,
   "nodes": [
     {
       "id": 1,
-      "type": "UNETLoader",
+      "type": "MiniMaxH3HybridLoader",
       "pos": [
-        2420,
+        1200,
         180
       ],
       "size": [
-        360,
-        132
+        580,
+        250
       ],
       "flags": {},
-      "order": 0,
+      "order": 32,
       "mode": 2,
-      "inputs": [],
+      "inputs": [
+        {
+          "localized_name": "base_model",
+          "name": "base_model",
+          "type": "COMBO",
+          "widget": {
+            "name": "base_model"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlay_model",
+          "name": "overlay_model",
+          "type": "COMBO",
+          "widget": {
+            "name": "overlay_model"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "overlay_preset",
+          "name": "overlay_preset",
+          "type": "COMBO",
+          "widget": {
+            "name": "overlay_preset"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "block_range_start",
+          "name": "block_range_start",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "block_range_start"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "block_range_end",
+          "name": "block_range_end",
+          "shape": 7,
+          "type": "INT",
+          "widget": {
+            "name": "block_range_end"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "final_adaln_from_overlay",
+          "name": "final_adaln_from_overlay",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "final_adaln_from_overlay"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "custom_overlays",
+          "name": "custom_overlays",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "custom_overlays"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "custom_base",
+          "name": "custom_base",
+          "shape": 7,
+          "type": "STRING",
+          "widget": {
+            "name": "custom_base"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "weight_dtype",
+          "name": "weight_dtype",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "weight_dtype"
+          },
+          "link": null
+        }
+      ],
       "outputs": [
         {
-          "name": "MODEL",
+          "localized_name": "model",
+          "name": "model",
           "type": "MODEL",
           "links": [
-            43
+            67
           ]
         }
       ],
-      "title": "H3 Diffusion Model",
       "properties": {
-        "Node name for S&R": "UNETLoader",
-        "vcd_group": "video"
+        "Node name for S&R": "MiniMaxH3HybridLoader",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        },
+        "vcd_group": "video",
+        "vcd_active_mode": 0
       },
       "widgets_values": [
-        "minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+        "MiniMaxH3\\minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+        "MiniMaxH3\\minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+        "block_range_adaln",
+        25,
+        49,
+        false,
+        "",
+        "",
         "default"
-      ]
+      ],
+      "widgets_values_named": {
+        "base_model": "MiniMaxH3\\minimax_h3_fl2va_pruned_int8_convrot.safetensors",
+        "overlay_model": "MiniMaxH3\\minimax_h3_ref2va_pruned_int8_convrot.safetensors",
+        "overlay_preset": "block_range_adaln",
+        "block_range_start": 25,
+        "block_range_end": 49,
+        "final_adaln_from_overlay": false,
+        "custom_overlays": "",
+        "custom_base": "",
+        "weight_dtype": "default"
+      },
+      "color": "#223",
+      "bgcolor": "#335"
     },
     {
       "id": 2,
@@ -68,7 +182,7 @@
         "vcd_group": "video"
       },
       "widgets_values": [
-        "qwen3vl_32b_minimax_h3_int8_convrot.safetensors",
+        "MiniMaxH3\\qwen3vl_32b_minimax_h3_nvfp4_awq.safetensors",
         "minimax",
         "default"
       ]
@@ -138,7 +252,7 @@
         "vcd_group": "video"
       },
       "widgets_values": [
-        "minimax_h3_video_vae_fp16.safetensors"
+        "MiniMaxH3\\minimax_h3_video_vae_fp16.safetensors"
       ]
     },
     {
@@ -172,7 +286,7 @@
         "vcd_group": "video"
       },
       "widgets_values": [
-        "minimax_h3_audio_vae_fp32.safetensors"
+        "MiniMaxH3\\minimax_h3_audio_vae_fp32.safetensors"
       ]
     },
     {
@@ -280,7 +394,7 @@
           "name": "clip_index",
           "type": "INT",
           "links": [
-            61
+            66
           ]
         },
         {
@@ -478,17 +592,17 @@
         {
           "name": "compiled",
           "type": "VC_COMPILED",
-          "link": 60
+          "link": 65
         },
         {
           "name": "registry",
           "type": "VC_ASSET_REGISTRY",
-          "link": 57
+          "link": 62
         },
         {
           "name": "clip_index",
           "type": "INT",
-          "link": 61,
+          "link": 66,
           "widget": {
             "name": "clip_index"
           }
@@ -524,8 +638,8 @@
       },
       "widgets_values": [
         "",
-        896,
-        672,
+        864,
+        480,
         243,
         1,
         "C:\\Software\\ComfyUI\\custom_nodes\\ComfyUI-MiniMaxH3-Contex-Loop"
@@ -645,7 +759,7 @@
         {
           "name": "model",
           "type": "MODEL",
-          "link": 19
+          "link": 72
         }
       ],
       "outputs": [
@@ -1116,40 +1230,62 @@
       "id": 22,
       "type": "ModelAttentionBackend",
       "pos": [
-        2420,
-        2984
+        1200,
+        730
       ],
       "size": [
-        360,
-        108
+        280,
+        70
       ],
       "flags": {},
-      "order": 21,
+      "order": 33,
       "mode": 2,
       "inputs": [
         {
+          "localized_name": "model",
           "name": "model",
           "type": "MODEL",
-          "link": 43
+          "link": 68
+        },
+        {
+          "localized_name": "attention",
+          "name": "attention",
+          "type": "COMBO",
+          "widget": {
+            "name": "attention"
+          },
+          "link": null
         }
       ],
       "outputs": [
         {
-          "name": "MODEL",
+          "localized_name": "モデル",
+          "name": "model",
           "type": "MODEL",
           "links": [
-            19
+            69
           ]
         }
       ],
       "title": "Model Attention Backend",
       "properties": {
         "Node name for S&R": "ModelAttentionBackend",
-        "vcd_group": "video"
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "version": "7.8",
+          "input_ue_unconnectable": {}
+        },
+        "vcd_group": "video",
+        "vcd_active_mode": 0
       },
       "widgets_values": [
-        "pytorch attention"
-      ]
+        "comfy kitchen attention"
+      ],
+      "widgets_values_named": {
+        "attention": "comfy kitchen attention"
+      },
+      "color": "#223",
+      "bgcolor": "#335"
     },
     {
       "id": 23,
@@ -1231,7 +1367,7 @@
       "type": "MiniMaxH3ChainPlanModern",
       "pos": [
         80,
-        862
+        1450
       ],
       "size": [
         1000,
@@ -1249,7 +1385,7 @@
         {
           "name": "plan_json_input",
           "type": "STRING",
-          "link": 58
+          "link": 63
         },
         {
           "name": "project_assets",
@@ -1257,9 +1393,33 @@
           "link": null
         },
         {
+          "name": "width",
+          "type": "INT",
+          "link": 55,
+          "widget": {
+            "name": "width"
+          }
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "link": 56,
+          "widget": {
+            "name": "height"
+          }
+        },
+        {
+          "name": "base_seed",
+          "type": "INT",
+          "link": 57,
+          "widget": {
+            "name": "base_seed"
+          }
+        },
+        {
           "name": "generation_fingerprint",
           "type": "STRING",
-          "link": 59,
+          "link": 64,
           "widget": {
             "name": "generation_fingerprint"
           }
@@ -1305,11 +1465,11 @@
         "vcd_group": "video"
       },
       "widgets_values": [
-        "{\"shots\": []}",
-        "vc_director_minimal",
+        "{\"shots\": [{\"id\": \"load_preview\", \"length\": 243, \"prompt\": \"Load supplies the compiled scene at execution.\", \"context_length\": 0, \"audio_context_length\": 0}]}",
+        "vc_director_scenario_demo",
         "",
-        896,
-        672,
+        864,
+        480,
         "video",
         "disabled",
         10,
@@ -1375,7 +1535,7 @@
         "vcd_group": "video"
       },
       "widgets_values": [
-        true,
+        false,
         false,
         0,
         false,
@@ -1538,9 +1698,9 @@
           "name": "registry",
           "type": "VC_ASSET_REGISTRY",
           "links": [
-            55,
-            56,
-            57
+            60,
+            61,
+            62
           ]
         },
         {
@@ -1583,7 +1743,7 @@
         {
           "name": "emd",
           "type": "STRING",
-          "link": null,
+          "link": 58,
           "widget": {
             "name": "emd"
           }
@@ -1591,7 +1751,7 @@
         {
           "name": "registry",
           "type": "VC_ASSET_REGISTRY",
-          "link": 55
+          "link": 60
         },
         {
           "name": "output_root",
@@ -1611,7 +1771,7 @@
         },
         {
           "name": "model_name",
-          "type": "STRING",
+          "type": "COMBO",
           "link": null,
           "widget": {
             "name": "model_name"
@@ -1624,6 +1784,19 @@
           "widget": {
             "name": "seed"
           }
+        },
+        {
+          "name": "vision_model_name",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "vision_model_name"
+          }
+        },
+        {
+          "name": "inference_settings",
+          "type": "VC_INFERENCE_SETTINGS",
+          "link": 59
         }
       ],
       "outputs": [
@@ -1648,12 +1821,13 @@
         "vcd_group": "language"
       },
       "widgets_values": [
-        "saved_scene",
-        "# 形式\n* schema: VCD_SCENE_EMD_V1\n\n# 作品\n* id: minimal\n* 尺: 00:10.000\n* 元シナリオhash: なし\n* 方針: Quiet cinema.\n* 発声: 指定台詞のみ\n* BGM: なし\n* 環境音: なし\n* 効果音: なし\n* 音声参照: なし\n\n# 人物 @hero\n* 名前: 少女\n* 特徴: A traveler wearing a red coat.\n* 画像: なし\n* 動画: なし\n* 声質音声: なし\n\n# 背景 station\n* 画像: なし\n* 情景: A station square at dusk.\n\n# 展開定義 return\n* 出演: @hero\n* 背景: station\n* 原文: 少女が駅を出て町を見渡す。\n* 台詞 dlg_home: @hero | 「ただいま。 @hero @recipient」\n* 発声: 指定台詞のみ\n* BGM: なし\n* 環境音: なし\n* 効果音: なし\n* 音声参照: なし\n* 必須出来事 req_exit: 駅から出る。\n\n# 出典\n* return: scenario:1-1\n* req_exit: scenario:1-1\n* dlg_home: scenario:1-1\n\n# Scene sc_return_a 00:00.000 --> 00:10.000\n* 展開: return\n* 出演: @hero\n* 背景: station\n* 接続: cut\n* 依存: なし\n* 固定: なし\n* 必須出来事: req_exit\n* 開始状態 @hero.position: 駅出口\n* 終了状態 @hero.position: 駅前\n\n## subject_definitions\n* @hero: A traveler wearing a red coat.\n\n## summary\n* The traveler returns to town.\n\n## retention_analysis\n* @hero: fully_preserved\n\n## detailed_description\n### Shot sh_exit 00:00.000 --> 00:10.000\n* ACTION ev_walk 00:00.000 --> 00:10.000 | @hero | Walks out of the station and looks at the street.\n* DIALOGUE dlg_home 00:05.000 --> 00:07.000 | @hero | 「ただいま。 @hero @recipient」\n\n## overall_soundscape\n* 発声: 指定台詞のみ\n* 環境音: なし\n* 効果音: なし\n* 音声参照: なし\n\n## non_diegetic_music\n* BGM: なし\n",
+        "scenario",
+        "# 形式\n* schema: VCD_SCENARIO_EMD_V1\n\n# 作品\n* id: scenario_demo\n* 尺: 00:10.000\n* 方針: 静かな短編映画。\n* 発声: 指定台詞のみ\n* BGM: なし\n* 環境音: なし\n* 効果音: なし\n\n# 人物 @hero\n* 名前: 少女\n* 特徴: 赤いコートを着た旅人。\n* 画像: なし\n* 声質音声: なし\n\n# 背景 station\n* 画像: なし\n* 情景: 夕暮れの駅前。\n\n# シナリオ\n## 展開 return\n* 出演: @hero\n* 背景: station\n* 台詞 dlg_home: @hero | 「ただいま。」\n少女が駅を出て町を見渡す。懐かしい景色に足を止め、穏やかな表情になる。\n",
         "",
         "[]",
-        "none",
-        1
+        "gemma-4-31b-it-heretic-ara-GGUF/gemma-4-31b-it-heretic-ara.Q4_K_S.gguf",
+        1,
+        "disabled"
       ]
     },
     {
@@ -1682,7 +1856,7 @@
         {
           "name": "registry",
           "type": "VC_ASSET_REGISTRY",
-          "link": 56
+          "link": 61
         },
         {
           "name": "runtime_root",
@@ -1698,21 +1872,21 @@
           "name": "plan_json",
           "type": "STRING",
           "links": [
-            58
+            63
           ]
         },
         {
           "name": "compiled",
           "type": "VC_COMPILED",
           "links": [
-            60
+            65
           ]
         },
         {
           "name": "generation_fingerprint",
           "type": "STRING",
           "links": [
-            59
+            64
           ]
         }
       ],
@@ -1721,9 +1895,1008 @@
         "vcd_group": "video"
       },
       "widgets_values": [
-        "minimal",
+        "scenario_demo",
         "C:\\Software\\ComfyUI\\custom_nodes\\ComfyUI-MiniMaxH3-Contex-Loop"
       ]
+    },
+    {
+      "id": 35,
+      "type": "ResolutionSelector",
+      "title": "Production Resolution",
+      "pos": [
+        80,
+        850
+      ],
+      "size": [
+        360,
+        190
+      ],
+      "flags": {},
+      "order": 29,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "aspect_ratio",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "aspect_ratio"
+          }
+        },
+        {
+          "name": "megapixels",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "megapixels"
+          }
+        },
+        {
+          "name": "multiple",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "multiple"
+          }
+        },
+        {
+          "name": "preview",
+          "type": "RESOLUTION_PREVIEW",
+          "link": null,
+          "widget": {
+            "name": "preview"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "width",
+          "type": "INT",
+          "links": [
+            55
+          ]
+        },
+        {
+          "name": "height",
+          "type": "INT",
+          "links": [
+            56
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ResolutionSelector",
+        "vcd_group": "video"
+      },
+      "widgets_values": [
+        "16:9 (Widescreen)",
+        0.4,
+        32
+      ],
+      "widgets_values_named": {
+        "aspect_ratio": "16:9 (Widescreen)",
+        "megapixels": 0.4,
+        "multiple": 32
+      }
+    },
+    {
+      "id": 37,
+      "type": "VCDirectorSeed32",
+      "pos": [
+        80,
+        1170
+      ],
+      "size": [
+        300,
+        150
+      ],
+      "flags": {},
+      "order": 30,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "mode",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "mode"
+          }
+        },
+        {
+          "name": "seed",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "seed"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "seed",
+          "type": "INT",
+          "links": [
+            57
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VCDirectorSeed32",
+        "vcd_group": "video"
+      },
+      "widgets_values": [
+        "fixed",
+        1
+      ]
+    },
+    {
+      "id": 38,
+      "type": "VCDirectorLoadTextFile",
+      "pos": [
+        -600,
+        1150
+      ],
+      "size": [
+        420,
+        180
+      ],
+      "flags": {},
+      "order": 31,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "file_data_base64",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "file_data_base64"
+          }
+        },
+        {
+          "name": "basename",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "basename"
+          }
+        },
+        {
+          "name": "browser_metadata_json",
+          "type": "STRING",
+          "link": null,
+          "widget": {
+            "name": "browser_metadata_json"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "text",
+          "type": "STRING",
+          "links": [
+            58
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VCDirectorLoadTextFile",
+        "vcd_group": "language"
+      },
+      "widgets_values": [
+        "IyDlvaLlvI8KKiBzY2hlbWE6IFZDRF9TQ0VOQVJJT19FTURfVjEKCiMg5L2c5ZOBCiogaWQ6IHNjZW5hcmlvX2RlbW8KKiDlsLo6IDAwOjEwLjAwMAoqIOaWuemHnTog6Z2Z44GL44Gq55+t57eo5pig55S744CCCiog55m65aOwOiDmjIflrprlj7DoqZ7jga7jgb8KKiBCR006IOOBquOBlwoqIOeSsOWig+mfszog44Gq44GXCiog5Yq55p6c6Z+zOiDjgarjgZcKCiMg5Lq654mpIEBoZXJvCiog5ZCN5YmNOiDlsJHlpbMKKiDnibnlvrQ6IOi1pOOBhOOCs+ODvOODiOOCkuedgOOBn+aXheS6uuOAggoqIOeUu+WDjzog44Gq44GXCiog5aOw6LOq6Z+z5aOwOiDjgarjgZcKCiMg6IOM5pmvIHN0YXRpb24KKiDnlLvlg486IOOBquOBlwoqIOaDheaZrzog5aSV5pqu44KM44Gu6aeF5YmN44CCCgojIOOCt+ODiuODquOCqgojIyDlsZXplosgcmV0dXJuCiog5Ye65ryUOiBAaGVybwoqIOiDjOaZrzogc3RhdGlvbgoqIOWPsOipniBkbGdfaG9tZTogQGhlcm8gfCDjgIzjgZ/jgaDjgYTjgb7jgILjgI0K5bCR5aWz44GM6aeF44KS5Ye644Gm55S644KS6KaL5rih44GZ44CC5oeQ44GL44GX44GE5pmv6Imy44Gr6Laz44KS5q2i44KB44CB56mP44KE44GL44Gq6KGo5oOF44Gr44Gq44KL44CCCg==",
+        "minimal.scenario.txt",
+        "{\"size\": 610, \"type\": \"text/plain\"}"
+      ]
+    },
+    {
+      "id": 43,
+      "type": "VCDirectorInferenceSettings",
+      "pos": [
+        -600,
+        1450
+      ],
+      "size": [
+        540,
+        600
+      ],
+      "flags": {},
+      "order": 32,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "planning_n_ctx",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "planning_n_ctx"
+          }
+        },
+        {
+          "name": "planning_max_tokens",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "planning_max_tokens"
+          }
+        },
+        {
+          "name": "compiler_n_ctx",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "compiler_n_ctx"
+          }
+        },
+        {
+          "name": "compiler_max_tokens",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "compiler_max_tokens"
+          }
+        },
+        {
+          "name": "vision_n_ctx",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "vision_n_ctx"
+          }
+        },
+        {
+          "name": "vision_max_tokens",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "vision_max_tokens"
+          }
+        },
+        {
+          "name": "gpu_layers",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "gpu_layers"
+          }
+        },
+        {
+          "name": "n_batch",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "n_batch"
+          }
+        },
+        {
+          "name": "temperature",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "temperature"
+          }
+        },
+        {
+          "name": "top_p",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "top_p"
+          }
+        },
+        {
+          "name": "repetition_penalty",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "repetition_penalty"
+          }
+        },
+        {
+          "name": "flash_attn",
+          "type": "BOOLEAN",
+          "link": null,
+          "widget": {
+            "name": "flash_attn"
+          }
+        },
+        {
+          "name": "kv_cache_type",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "kv_cache_type"
+          }
+        },
+        {
+          "name": "op_offload",
+          "type": "BOOLEAN",
+          "link": null,
+          "widget": {
+            "name": "op_offload"
+          }
+        },
+        {
+          "name": "vision_gpu_layers",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "vision_gpu_layers"
+          }
+        },
+        {
+          "name": "vision_n_batch",
+          "type": "INT",
+          "link": null,
+          "widget": {
+            "name": "vision_n_batch"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "inference_settings",
+          "type": "VC_INFERENCE_SETTINGS",
+          "links": [
+            59
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VCDirectorInferenceSettings",
+        "vcd_group": "language"
+      },
+      "widgets_values": [
+        24576,
+        4096,
+        16384,
+        4096,
+        16384,
+        1024,
+        -1,
+        512,
+        0.2,
+        0.9,
+        1.05,
+        true,
+        "q8_0",
+        true,
+        -1,
+        512
+      ]
+    },
+    {
+      "id": 39,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        1200,
+        550
+      ],
+      "size": [
+        560,
+        90
+      ],
+      "flags": {},
+      "order": 32,
+      "mode": 2,
+      "inputs": [
+        {
+          "localized_name": "モデル",
+          "name": "model",
+          "type": "MODEL",
+          "link": 67
+        },
+        {
+          "localized_name": "lora_name",
+          "name": "lora_name",
+          "type": "COMBO",
+          "widget": {
+            "name": "lora_name"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "モデルの強度",
+          "name": "strength_model",
+          "type": "FLOAT",
+          "widget": {
+            "name": "strength_model"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "モデル",
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            68
+          ]
+        }
+      ],
+      "title": "TURBO LoRA — 8 STEP (BYPASSED)",
+      "properties": {
+        "Node name for S&R": "LoraLoaderModelOnly",
+        "ue_properties": {
+          "widget_ue_connectable": {
+            "lora_name": true,
+            "strength_model": true
+          },
+          "version": "7.8",
+          "input_ue_unconnectable": {}
+        },
+        "vcd_group": "video",
+        "vcd_active_mode": 4
+      },
+      "widgets_values": [
+        "MiniMaxH3\\minimax_h3_ref2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensors",
+        1
+      ],
+      "widgets_values_named": {
+        "lora_name": "MiniMaxH3\\minimax_h3_ref2v_turbo_8step_v1.0_768p_comfyui_bf16.safetensors",
+        "strength_model": 1
+      },
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 40,
+      "type": "BlockSparseAttention",
+      "pos": [
+        1200,
+        900
+      ],
+      "size": [
+        350,
+        250
+      ],
+      "flags": {},
+      "order": 33,
+      "mode": 2,
+      "inputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "link": 69
+        },
+        {
+          "localized_name": "selection",
+          "name": "selection",
+          "type": "COMFY_DYNAMICCOMBO_V3",
+          "widget": {
+            "name": "selection"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "keep_percent",
+          "name": "selection.keep_percent",
+          "type": "FLOAT",
+          "widget": {
+            "name": "selection.keep_percent"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "start_percent",
+          "name": "start_percent",
+          "type": "FLOAT",
+          "widget": {
+            "name": "start_percent"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "end_percent",
+          "name": "end_percent",
+          "type": "FLOAT",
+          "widget": {
+            "name": "end_percent"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "dense_blocks",
+          "name": "dense_blocks",
+          "type": "STRING",
+          "widget": {
+            "name": "dense_blocks"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "min_tokens",
+          "name": "min_tokens",
+          "type": "INT",
+          "widget": {
+            "name": "min_tokens"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "extra_tokens",
+          "name": "extra_tokens",
+          "type": "INT",
+          "widget": {
+            "name": "extra_tokens"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sink_conditioning",
+          "name": "sink_conditioning",
+          "type": "COMBO",
+          "widget": {
+            "name": "sink_conditioning"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "verbose",
+          "name": "verbose",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "verbose"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "links": [
+            70
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "BlockSparseAttention",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        },
+        "vcd_group": "video",
+        "vcd_active_mode": 0
+      },
+      "widgets_values": [
+        "sla",
+        10,
+        0.2,
+        1,
+        "",
+        12288,
+        256,
+        "exact_kv_and_rows",
+        false
+      ],
+      "widgets_values_named": {
+        "selection": "sla",
+        "selection.keep_percent": 10,
+        "start_percent": 0.2,
+        "end_percent": 1,
+        "dense_blocks": "",
+        "min_tokens": 12288,
+        "extra_tokens": 256,
+        "sink_conditioning": "exact_kv_and_rows",
+        "verbose": false
+      },
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 41,
+      "type": "SpectrumApplyMiniMaxH3",
+      "pos": [
+        1200,
+        1250
+      ],
+      "size": [
+        390.669921875,
+        658
+      ],
+      "flags": {},
+      "order": 34,
+      "mode": 2,
+      "inputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "link": 70
+        },
+        {
+          "localized_name": "enabled",
+          "name": "enabled",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "enabled"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "blend_weight",
+          "name": "blend_weight",
+          "type": "FLOAT",
+          "widget": {
+            "name": "blend_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "degree",
+          "name": "degree",
+          "type": "INT",
+          "widget": {
+            "name": "degree"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "ridge_lambda",
+          "name": "ridge_lambda",
+          "type": "FLOAT",
+          "widget": {
+            "name": "ridge_lambda"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "window_size",
+          "name": "window_size",
+          "type": "FLOAT",
+          "widget": {
+            "name": "window_size"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "flex_window",
+          "name": "flex_window",
+          "type": "FLOAT",
+          "widget": {
+            "name": "flex_window"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "warmup_steps",
+          "name": "warmup_steps",
+          "type": "INT",
+          "widget": {
+            "name": "warmup_steps"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "tail_actual_steps",
+          "name": "tail_actual_steps",
+          "type": "INT",
+          "widget": {
+            "name": "tail_actual_steps"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "max_history",
+          "name": "max_history",
+          "type": "INT",
+          "widget": {
+            "name": "max_history"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "debug",
+          "name": "debug",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "debug"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "history_storage",
+          "name": "history_storage",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "history_storage"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "bootstrap_first_forecast",
+          "name": "bootstrap_first_forecast",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "bootstrap_first_forecast"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "anchor_residual_feedback",
+          "name": "anchor_residual_feedback",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "anchor_residual_feedback"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "selective_rollback_correction",
+          "name": "selective_rollback_correction",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "selective_rollback_correction"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "offline_smoothing_replay",
+          "name": "offline_smoothing_replay",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "offline_smoothing_replay"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "audio_blend_weight",
+          "name": "audio_blend_weight",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "audio_blend_weight"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "offline_archive_storage",
+          "name": "offline_archive_storage",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "offline_archive_storage"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_aware_mode",
+          "name": "model_aware_mode",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "model_aware_mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_aware_risk_threshold",
+          "name": "model_aware_risk_threshold",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "model_aware_risk_threshold"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_aware_trust_shrinkage",
+          "name": "model_aware_trust_shrinkage",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "model_aware_trust_shrinkage"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "model_aware_replay_generic_correction",
+          "name": "model_aware_replay_generic_correction",
+          "shape": 7,
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "model_aware_replay_generic_correction"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "generic_correction_mode",
+          "name": "generic_correction_mode",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "generic_correction_mode"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "generic_correction_limiter",
+          "name": "generic_correction_limiter",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "generic_correction_limiter"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "generic_correction_limit",
+          "name": "generic_correction_limit",
+          "shape": 7,
+          "type": "FLOAT",
+          "widget": {
+            "name": "generic_correction_limit"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "generic_correction_attenuation",
+          "name": "generic_correction_attenuation",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "generic_correction_attenuation"
+          },
+          "link": null
+        },
+        {
+          "localized_name": "sa_pece_forecast_policy",
+          "name": "sa_pece_forecast_policy",
+          "shape": 7,
+          "type": "COMBO",
+          "widget": {
+            "name": "sa_pece_forecast_policy"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "links": [
+            71
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "SpectrumApplyMiniMaxH3",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        },
+        "vcd_group": "video",
+        "vcd_active_mode": 0
+      },
+      "widgets_values": [
+        true,
+        0.5,
+        1,
+        0.1,
+        2,
+        0.75,
+        1,
+        1,
+        8,
+        false,
+        "system_ram",
+        true,
+        false,
+        false,
+        true,
+        0,
+        "system_ram",
+        "off",
+        0.65,
+        false,
+        false,
+        "coordinate_rls",
+        "hard_clip",
+        0.4,
+        "no_attenuation",
+        "balanced"
+      ],
+      "widgets_values_named": {
+        "enabled": true,
+        "blend_weight": 0.5,
+        "degree": 1,
+        "ridge_lambda": 0.1,
+        "window_size": 2,
+        "flex_window": 0.75,
+        "warmup_steps": 1,
+        "tail_actual_steps": 1,
+        "max_history": 8,
+        "debug": false,
+        "history_storage": "system_ram",
+        "bootstrap_first_forecast": true,
+        "anchor_residual_feedback": false,
+        "selective_rollback_correction": false,
+        "offline_smoothing_replay": true,
+        "audio_blend_weight": 0,
+        "offline_archive_storage": "system_ram",
+        "model_aware_mode": "off",
+        "model_aware_risk_threshold": 0.65,
+        "model_aware_trust_shrinkage": false,
+        "model_aware_replay_generic_correction": false,
+        "generic_correction_mode": "coordinate_rls",
+        "generic_correction_limiter": "hard_clip",
+        "generic_correction_limit": 0.4,
+        "generic_correction_attenuation": "no_attenuation",
+        "sa_pece_forecast_policy": "balanced"
+      },
+      "color": "#223",
+      "bgcolor": "#335"
+    },
+    {
+      "id": 42,
+      "type": "ModelPatchTorchSettings",
+      "pos": [
+        1200,
+        2050
+      ],
+      "size": [
+        270,
+        60
+      ],
+      "flags": {},
+      "order": 35,
+      "mode": 2,
+      "inputs": [
+        {
+          "localized_name": "model",
+          "name": "model",
+          "type": "MODEL",
+          "link": 71
+        },
+        {
+          "localized_name": "enable_fp16_accumulation",
+          "name": "enable_fp16_accumulation",
+          "type": "BOOLEAN",
+          "widget": {
+            "name": "enable_fp16_accumulation"
+          },
+          "link": null
+        }
+      ],
+      "outputs": [
+        {
+          "localized_name": "モデル",
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            72
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "ModelPatchTorchSettings",
+        "ue_properties": {
+          "widget_ue_connectable": {},
+          "input_ue_unconnectable": {},
+          "version": "7.8"
+        },
+        "vcd_group": "video",
+        "vcd_active_mode": 0
+      },
+      "widgets_values": [
+        true
+      ],
+      "widgets_values_named": {
+        "enable_fp16_accumulation": true
+      },
+      "color": "#223",
+      "bgcolor": "#335"
     }
   ],
   "links": [
@@ -1838,14 +3011,6 @@
       12,
       3,
       "LATENT"
-    ],
-    [
-      19,
-      22,
-      0,
-      13,
-      0,
-      "MODEL"
     ],
     [
       20,
@@ -2032,14 +3197,6 @@
       "H3_CHAIN_MANIFEST"
     ],
     [
-      43,
-      1,
-      0,
-      22,
-      0,
-      "MODEL"
-    ],
-    [
       44,
       7,
       0,
@@ -2121,6 +3278,46 @@
     ],
     [
       55,
+      35,
+      0,
+      24,
+      3,
+      "INT"
+    ],
+    [
+      56,
+      35,
+      1,
+      24,
+      4,
+      "INT"
+    ],
+    [
+      57,
+      37,
+      0,
+      24,
+      5,
+      "INT"
+    ],
+    [
+      58,
+      38,
+      0,
+      33,
+      1,
+      "STRING"
+    ],
+    [
+      59,
+      43,
+      0,
+      33,
+      8,
+      "VC_INFERENCE_SETTINGS"
+    ],
+    [
+      60,
       32,
       0,
       33,
@@ -2128,7 +3325,7 @@
       "VC_ASSET_REGISTRY"
     ],
     [
-      56,
+      61,
       32,
       0,
       34,
@@ -2136,7 +3333,7 @@
       "VC_ASSET_REGISTRY"
     ],
     [
-      57,
+      62,
       32,
       0,
       11,
@@ -2144,7 +3341,7 @@
       "VC_ASSET_REGISTRY"
     ],
     [
-      58,
+      63,
       34,
       0,
       24,
@@ -2152,15 +3349,15 @@
       "STRING"
     ],
     [
-      59,
+      64,
       34,
       2,
       24,
-      3,
+      6,
       "STRING"
     ],
     [
-      60,
+      65,
       34,
       1,
       11,
@@ -2168,12 +3365,60 @@
       "VC_COMPILED"
     ],
     [
-      61,
+      66,
       8,
       1,
       11,
       9,
       "INT"
+    ],
+    [
+      67,
+      1,
+      0,
+      39,
+      0,
+      "MODEL"
+    ],
+    [
+      68,
+      39,
+      0,
+      22,
+      0,
+      "MODEL"
+    ],
+    [
+      69,
+      22,
+      0,
+      40,
+      0,
+      "MODEL"
+    ],
+    [
+      70,
+      40,
+      0,
+      41,
+      0,
+      "MODEL"
+    ],
+    [
+      71,
+      41,
+      0,
+      42,
+      0,
+      "MODEL"
+    ],
+    [
+      72,
+      42,
+      0,
+      13,
+      0,
+      "MODEL"
     ]
   ],
   "groups": [
@@ -2195,7 +3440,7 @@
         -650,
         80,
         600,
-        850
+        2050
       ],
       "color": "#57689a",
       "font_size": 24,
@@ -2206,8 +3451,8 @@
       "bounding": [
         20,
         80,
-        6000,
-        2200
+        6720,
+        3200
       ],
       "color": "#92704a",
       "font_size": 24,
@@ -2229,7 +3474,8 @@
     "vc_director": {
       "schema": "VCD_WORKFLOW_V1",
       "base_workflow_sha256": "cd3c3ee994114371e5f3cc6a91a42d0d18e111a7b0ef1d90222637b0ebe09fa1",
-      "runtime_contract": "VCD_CL_GUIDE_24FPS_V1"
+      "runtime_contract": "VCD_CL_GUIDE_24FPS_V1",
+      "video_model_stack_sha256": "de61593c9b5de0951fd34b186185d5f5be4b72cf94d338f002dfec136a3394af"
     }
   },
   "version": 0.4

@@ -9,7 +9,7 @@ app.registerExtension({
             node.addWidget("button", label, null, () => {
                 for (const item of app.graph._nodes) {
                     const group = item.properties?.vcd_group;
-                    if (group) item.mode = group === enabled ? 0 : 2;
+                    if (group) item.mode = group === enabled ? (item.properties?.vcd_active_mode ?? 0) : 2;
                 }
                 app.graph.setDirtyCanvas(true, true);
             }, { serialize: false });

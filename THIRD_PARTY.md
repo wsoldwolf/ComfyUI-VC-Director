@@ -1,5 +1,9 @@
 # 再利用コード
 
+動画WFのHybrid Loader・高速化・Text Encoder設定はMV-Directorの`workflows/02_video_generator.json`から抽出しています。GPL-3.0-only、Copyright © 2026 wsoldwolf。元HEAD・元WFと抽出snapshotのhashは[移植記録](docs/implementation/mv-video-workflow-sources.json)に保持し、`tools/workflow_templates/mv_video_model_stack.json`から再生成します。Hybrid Loader・Spectrum・KJNodes本体は同梱せず、既存の登録ノードへ接続します。
+
+32-bit Seed・Load Text Fileと対応するブラウザUI／テキストdecode処理もMV-Directorから移植しています。VCのノードID・カテゴリへ変更し、UIから未使用のCombo処理を除外しています。移植元HEAD・ファイルhash・統合先hashは[追加移植記録](docs/implementation/mv-utilities-sources.json)へ保存しています（GPL-3.0-only、Copyright © 2026 wsoldwolf）。
+
 ComfyUI-MV-Directorの推論、翻訳、画像観察と必要な補助型を`core/`へ、翻訳・観察promptを`prompts/`へ統合しています。
 
 - 元リポジトリ: ComfyUI-MV-Director（同一プロジェクト群）

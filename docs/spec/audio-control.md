@@ -40,6 +40,8 @@ DIALOGUE recordの本文を発話として扱う。人物はrecordの話者`@her
 
 英訳LLMへ発話本文を送らず、共通文・summary・人物・背景説明へ複製しない。台詞中の`@hero`や`@recipient`も語句として保存する。参照・人物記号の置換は発話の外だけで行う。
 
+summary・ACTIONの「言葉を口にする」「話す」「声を出す」なども発声説明として詳細化段階で検査し、対象fieldだけの修正をGemma4へ要求する。作者台詞のDIALOGUEは削除・改変しない。翻訳が発声を追加した場合は、移植したwhole-field translatorの既存二回の試行枠内で意味検証と修正要求を行う。Pythonが発声句を切り落として翻訳成功にしない。検証に通った翻訳だけをcacheへ保存する。
+
 ## 4. H3への明示指示
 
 許可からCompilerが固定制約を生成する。Gemma4が許可された動作・音響を具体化する責務は変わらない。
@@ -49,10 +51,12 @@ DIALOGUE recordの本文を発話として扱う。人物はrecordの話者`@her
 | 全音響なし | Complete silence。発声、歌唱、鼻歌、音楽、環境音、効果音を明示禁止 |
 | 発声なし・物理音あり | 許可音だけを列挙し、speech / narration / singing / humming / character vocalizationを禁止 |
 | 指定台詞のみ | 指定話者が指定語句を指定区間だけ発声。追加、言い換え、反復、説明文の読み上げを禁止 |
-| BGMなし | non_diegetic_musicはN/A。劇中音楽も無許可なら禁止 |
+| BGMなし | non_diegetic_musicへNo non-diegetic musicとBGM・伴奏・旋律・劇中音楽の明示禁止を記述 |
 | BGM生成 | 指定音楽だけを生成。歌詞・歌唱が未許可なら器楽に限定 |
 
 無声区間は発声許可をScene全体へ拡張せず、発話event以外の発声を禁止する。人物の笑い声・溜め息・叫びなども初期V1では無指定で追加しない。参照音声を「そのまま読み上げる」「追加の話者」と解釈させない。
+
+音響prompt policy v2は、全無音Sceneへ全区間の無音、物理音・BGMなしの台詞Sceneへdry isolated dialogueと発話前後の無音を追記する。専用の音楽欄はN/Aで済ませない。旧policy v1は保存revisionの再現読込用に維持する。
 
 発声キューの検査は日本語と英訳後に実施し、既定strictとする。warnは明示選択の診断用。構造エラー、許可不一致、話者不明をwarnで緩和しない。否定文・保護した発話・Compiler所有制約を肯定的発声要求と混同しない。
 

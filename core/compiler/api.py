@@ -15,6 +15,9 @@ from ..artifacts.validation import unique, validate_story
 NATIVE = re.compile(r"<(?:Subject [1-4]|Picture [1-9]|Video [1-3]|Audio [1-6])>")
 SYMBOL = re.compile(r"(?<![A-Za-z0-9_])@([A-Za-z][A-Za-z0-9_-]*)")
 JAPANESE = re.compile(r"[\u3040-\u30ff\u3400-\u9fff]")
+LEGACY_PROMPT_POLICY = "vcd-audio-v1"
+PROMPT_POLICY = "vcd-audio-v2"
+NO_MUSIC = "No non-diegetic music. No background music, soundtrack, score, melody or instrumental accompaniment. No diegetic music."
 
 
 class EnglishOnlyTranslator:
@@ -74,14 +77,15 @@ def bind_references(document, scene, registry):
     return bindings + paired
 
 
-def compile_scene_emd(text, assets=(), translator=None):
+def compile_scene_emd(text, assets=(), translator=None, *, prompt_policy=PROMPT_POLICY):
     text = normalize(text)
     document = parse(text)
     require(document["schema"] == "VCD_SCENE_DOCUMENT_V1", "INPUT_KIND", "/", "Compiler requires scene EMD")
-    return compile_document(document, text, assets, translator)
+    return compile_document(document, text, assets, translator, prompt_policy=prompt_policy)
 
 
-def compile_document(document, scene_emd, assets=(), translator=None):
+def compile_document(document, scene_emd, assets=(), translator=None, *, prompt_policy=PROMPT_POLICY):
+    require(prompt_policy in {LEGACY_PROMPT_POLICY, PROMPT_POLICY}, "PROMPT_POLICY", "/", "Unknown audio prompt policy")
     document = copy.deepcopy(validate_story(document))
     require(document["schema"] == "VCD_SCENE_DOCUMENT_V1", "INPUT_KIND", "/", "Scene document required")
     scene_emd = normalize(scene_emd)
@@ -157,13 +161,13 @@ def compile_document(document, scene_emd, assets=(), translator=None):
                     speech.append(protected)
                 else:
                     details.append(f"{interval(e)} {e['kind'].upper()} {owner}: {translate(e['text'])}")
-        sounds = [directives(scene["audio"])]
+        sounds = [directives(scene["audio"], explicit=prompt_policy == PROMPT_POLICY)]
         for key in ("ambience", "effects"):
             if scene["audio"][key + "_description"]:
                 sounds.append(key.capitalize() + ": " + translate(scene["audio"][key + "_description"]))
         sounds.extend(f"{interval(e)} {e['kind'].upper()}: {translate(e['text'])}" for e in scene["sound_events"])
         sounds.extend(f"{b['role']} reference: {b['token']}" for b in bindings if b["role"] in {"music", "ambience", "effects", "video_audio"})
-        music = "N/A" if scene["audio"]["bgm"] == "none" else translate(scene["audio"]["bgm_description"]) + ". Instrumental only."
+        music = (NO_MUSIC if prompt_policy == PROMPT_POLICY else "N/A") if scene["audio"]["bgm"] == "none" else translate(scene["audio"]["bgm_description"]) + ". Instrumental only."
         sections = [("subject_definitions", definitions), ("summary", ["[reference generation] " + translate(scene["summary"])]),
                     ("retention_analysis", [f"{subject_map[r['actor_id']]}: {r['mode']}" for r in scene["retention"]] or ["N/A"]),
                     ("detailed_description", [translate(d) for d in document["direction"]] + details), ("overall_soundscape", sounds), ("non_diegetic_music", [music])]
@@ -193,6 +197,7 @@ def compile_document(document, scene_emd, assets=(), translator=None):
     execution = dict(schema="VCD_EXECUTION_V1", project_id=document["project_id"], scene_emd_sha256=digest(scene_emd), plan_sha256=digest(canonical(plan)),
                      runtime_contract=runtime, assets=list(assets), segments=segments, reference_schedule=schedule, output_audio="generated")
     validate(execution, "execution")
-    metadata = dict(schema="VCD_RUN_METADATA_V1", compiler_version=__version__, scene_emd_sha256=digest(scene_emd), plan_sha256=execution["plan_sha256"],
+    metadata = dict(schema="VCD_RUN_METADATA_V1", compiler_version=__version__, prompt_policy_version=prompt_policy,
+                    scene_emd_sha256=digest(scene_emd), plan_sha256=execution["plan_sha256"],
                     execution_sha256=digest(canonical(execution)), translation_trace=trace, output_frames=output_start, diagnostics=[])
     return CompileResult(scene_emd, document, plan, execution, metadata)

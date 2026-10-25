@@ -1,0 +1,4 @@
+ID・本文・順序・固定条件を変更せず、指定Sceneの時刻だけをTimingPatchとして返します。
+timingが固定されたSceneを変更してはいけません。Sceneは15秒以内です。
+ShotのIDとeventのIDとsound_eventのIDを維持し、各時刻をSceneまたはShot内に収めます。
+元のSceneでCAMERAが各Shot全体を連続して覆っている場合、時刻変更後もCAMERA区間同士を重ねず、各Shotの開始から終了まで隙間なく覆います。ACTIONやDIALOGUEとの時間的な重なりは許可します。既存eventのID・順序・本文を変えず、数値だけを調整します。

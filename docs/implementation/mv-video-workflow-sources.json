@@ -1,0 +1,28 @@
+{
+  "source_project": "ComfyUI-MV-Director",
+  "source_head": "f01685c0e99223118cc91bd3346c4d2eef802fb8",
+  "source_file": "workflows/02_video_generator.json",
+  "source_sha256": "836a5187bbe3e3858297eab53dc38e8f1a858e5f92fab4908f0d36cfeb804652",
+  "license": "GPL-3.0-only",
+  "copyright": "Copyright (c) 2026 wsoldwolf",
+  "snapshot": "tools/workflow_templates/mv_video_model_stack.json",
+  "snapshot_sha256": "de61593c9b5de0951fd34b186185d5f5be4b72cf94d338f002dfec136a3394af",
+  "node_types": [
+    "MiniMaxH3HybridLoader",
+    "LoraLoaderModelOnly",
+    "ModelAttentionBackend",
+    "BlockSparseAttention",
+    "SpectrumApplyMiniMaxH3",
+    "ModelPatchTorchSettings",
+    "CLIPLoader",
+    "VAELoader"
+  ],
+  "adaptations": [
+    "VC node IDs, layout, video-group mute and bypass policy",
+    "Existing VC reference adapter and Context Loop sampling/output graph retained",
+    "Retain source model subfolder names for both VAE loaders"
+  ],
+  "schema_snapshot": "tools/workflow_templates/video_model_schemas.json",
+  "schema_source": "Local ComfyUI /object_info, model inventory sanitized",
+  "schema_sha256": "02e330417d27d189b802b37d9c74d19b5501e5df2caa5a3bff33c03173152b31"
+}

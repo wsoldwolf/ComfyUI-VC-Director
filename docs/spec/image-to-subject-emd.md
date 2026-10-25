@@ -28,6 +28,10 @@ VC標準WFでは共有素材IDと人物@記号を使い、Compilerがscheduleと
 
 ## 5. 検証
 
+Buildの自動Visionは画像を人物／背景IDへ対応付け、観察事実をEnhancerだけでなくTimelinePlannerへも渡す。計画時のdescriptionへ決定的に合成し、生成したScene EMDの人物`特徴`・背景`情景`へ保存する。人物の観察特徴は各Sceneの`subject_definitions`にも反映する。原文シナリオは保存時にも書き換えない。手書き文章は保持して観察を補足し、同一人物／背景の手入力image_factsは自動観察より優先する。
+
+画像を指定したシナリオでは特徴／情景の省略を許可するが、計画前に観察結果で補完することを必須とする。補完不能時はLLMへ不完全な定義を渡さず、Vision設定または文章入力を案内する。完成したScene artifactのdescriptionは引き続き非空とする。
+
 同じ観察recordから同等の人物・背景断片を得ること、profile・hint・複数view・画像保持・cacheを検証する。VCのID変換とschedule対応を別に試験する。観察の引用は非発話記法へ構造化し、人物のDIALOGUEを観察から新設しない。発声・BGMの許可を増やさない。
 
 実Vision品質と機械処理の互換性は分けて評価する。モデル・mmproj・プロンプト変更で依存する結果を無効化する。

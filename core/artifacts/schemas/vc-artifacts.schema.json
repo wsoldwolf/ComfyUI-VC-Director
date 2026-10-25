@@ -1229,14 +1229,14 @@
         "actors": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/actor"
+            "$ref": "#/$defs/scenario_actor"
           },
           "minItems": 0
         },
         "backgrounds": {
           "type": "array",
           "items": {
-            "$ref": "#/$defs/background"
+            "$ref": "#/$defs/scenario_background"
           },
           "minItems": 1
         },
@@ -2130,6 +2130,125 @@
         "records"
       ],
       "additionalProperties": false
+    },
+    "scenario_actor": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "image_asset_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "video_asset_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "voice_asset_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "image_asset_id",
+        "video_asset_id",
+        "voice_asset_id"
+      ],
+      "additionalProperties": false,
+      "anyOf": [
+        {
+          "properties": {
+            "description": {
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "properties": {
+            "image_asset_id": {
+              "type": "string"
+            }
+          }
+        }
+      ]
+    },
+    "scenario_background": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "description": {
+          "type": "string"
+        },
+        "image_asset_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "description",
+        "image_asset_id"
+      ],
+      "additionalProperties": false,
+      "anyOf": [
+        {
+          "properties": {
+            "description": {
+              "minLength": 1
+            }
+          }
+        },
+        {
+          "properties": {
+            "image_asset_id": {
+              "type": "string"
+            }
+          }
+        }
+      ]
     }
   }
 }

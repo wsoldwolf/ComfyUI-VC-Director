@@ -1,16 +1,21 @@
 """Timeline construction, scene detail and numeric retiming."""
 import copy
 
-from ..errors import require
+from ..errors import VCError, require
 from ..artifacts.schema import validate
 from ..artifacts.validation import unique, validate_story
+from ..vision.image_facts import apply_image_facts, apply_scene_image_facts
+from .camera import validate_camera_plan
 
 
 class StoryTimelinePlanner:
     def __init__(self, runner):
         self.runner = runner
 
-    def plan(self, scenario, enhanced):
+    def plan(self, scenario, enhanced, *, image_facts=()):
+        require(scenario.get("schema") == "VCD_SCENARIO_V1", "INPUT_KIND", "/schema",
+                "TimelinePlannerにはVCD_SCENARIO_EMD_V1のシナリオが必要です。シーンEMDはsaved_sceneでコンパイルしてください。")
+        scenario = apply_image_facts(scenario, image_facts)
         validate_story(scenario)
         validate(enhanced, "enhanced_story")
         require(enhanced["scenario_sha256"] == scenario["source_sha256"], "ENHANCED_SOURCE", "/", "Enhancer scenario mismatch")
@@ -25,10 +30,11 @@ class StoryTimelinePlanner:
                     start = accepted[-1]["end_ms"] if accepted else 0
                     require(outline["start_ms"] == start and 0 < outline["end_ms"] - start <= 15000, "OUTLINE_TIMING", outline["id"], "Scenes must be contiguous and <=15 seconds")
                     require(outline["id"] not in {s["id"] for s in accepted} and set(outline["depends_on"]) <= {s["id"] for s in accepted}, "OUTLINE_DEPENDENCY", outline["id"], "Duplicate or forward dependency")
-                    if outline["transition"] == "continue":
+                    if not accepted:
+                        require(outline["transition"] == "cut", "OUTLINE_TRANSITION", outline["id"],
+                                "First Scene must use transition='cut' and depends_on=[]; no prior Scene exists")
+                    elif outline["transition"] == "continue":
                         require(bool(accepted) and accepted[-1]["id"] in outline["depends_on"] and set(accepted[-1]["actor_ids"]) == set(outline["actor_ids"]) and accepted[-1]["background_id"] == outline["background_id"], "OUTLINE_TRANSITION", outline["id"], "Invalid continuation")
-                    elif not accepted:
-                        require(outline["transition"] == "cut", "OUTLINE_TRANSITION", outline["id"], "First Scene must be cut")
                     local_required.extend(outline["required_event_ids"])
                     accepted.append(outline)
                 expected = [e["id"] for e in required if e["beat_id"] == beat["id"]]
@@ -57,6 +63,7 @@ class StoryTimelinePlanner:
                 local_doc = self._document(scenario, [local_scene], [e for e in required if e["id"] in scene["required_event_ids"]])
                 local_doc["beats"] = [local_beat]
                 validate_story(local_doc)
+                validate_camera_plan(scene)
                 all_shots = [s["id"] for sc in scenes for s in sc["shots"]]
                 all_events = [e["id"] for sc in scenes for s in sc["shots"] for e in s["events"]] + [e["id"] for sc in scenes for e in sc["sound_events"]]
                 require(not set(all_shots) & {s["id"] for s in scene["shots"]}, "DUPLICATE_ID", scene["id"], "Shot ID reused")
@@ -65,7 +72,8 @@ class StoryTimelinePlanner:
             # dependencies. Unrelated beats' detailed prose is optional context.
             previous_scenes = [s for s in scenes if s["beat_id"] == outline["beat_id"] or s["id"] in outline["depends_on"] or s is scenes[-1]]
             payload = dict(scenario=scenario, enhanced=enhanced, outline=outline, previous_scenes=previous_scenes, locked_scene=None)
-            scenes.append(self.runner.run("detail", outline["id"], payload, check))
+            scene = self.runner.run("detail", outline["id"], payload, check)
+            scenes.append(apply_scene_image_facts(scene, scenario, image_facts))
         return validate_story(self._document(scenario, scenes, required))
 
     @staticmethod
@@ -82,6 +90,12 @@ class StoryTimelinePlanner:
         for scene_id in changed_scene_ids:
             scene = targets[scene_id]
             require("timing" not in scene["locked"], "LOCKED_TIMING", scene_id, "Scene timing is fixed")
+            # Preserve complete camera plans while accepting optional legacy coverage.
+            try:
+                validate_camera_plan(scene)
+                camera_planned = True
+            except VCError:
+                camera_planned = False
 
             def check(timing):
                 require(timing["scene_id"] == scene_id, "RETIME_TARGET", scene_id, "Wrong target")
@@ -97,6 +111,12 @@ class StoryTimelinePlanner:
                 require(endpoint == duration, "RETIME_SHOT", scene_id, "Shots must cover the Scene")
                 require([e["id"] for e in timing["sound_events"]] == [e["id"] for e in scene["sound_events"]], "RETIME_STRUCTURE", scene_id, "Sound structure changed")
                 require(all(0 <= e["start_ms"] < e["end_ms"] <= duration for e in timing["sound_events"]), "RETIME_SOUND", scene_id, "Sound must fit its Scene")
+                if camera_planned:
+                    camera_scene = dict(id=scene_id, shots=[])
+                    for old, new in zip(scene["shots"], timing["shots"]):
+                        camera_scene["shots"].append(dict(new, events=[dict(event, start_ms=t["start_ms"], end_ms=t["end_ms"])
+                            for event, t in zip(old["events"], new["events"])]))
+                    validate_camera_plan(camera_scene)
 
             timing = self.runner.run("retime", scene_id, dict(document=document, changed_scene_ids=list(changed_scene_ids)), check)
             scene.update(start_ms=timing["start_ms"], end_ms=timing["end_ms"])

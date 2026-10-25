@@ -4,18 +4,46 @@ import sys
 import types
 import unittest
 from pathlib import Path
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from test_core import compile_fixture, english_document, fixture, temporary_directory
 from vc_director.core.artifacts.assets import registry
 from vc_director.core.emd import parse, render_scene
 from vc_director.core.errors import VCError
-from vc_director.nodes import VCDirectorRef2VA
+from vc_director.nodes import VCDirectorAssetRegistry, VCDirectorRef2VA
 from vc_director.nodes.common import _guard
 from vc_director.core.protocols import StageRunner
 from vc_director.core.planner import StoryTimelinePlanner
 from vc_director.core.h3_contract.runtime import conditioning_inputs
 from vc_director.core.utilities import canonical
+
+
+class AssetRegistryTests(unittest.TestCase):
+    def test_browser_upload_uses_input_directory_with_custom_asset_root(self):
+        with temporary_directory() as temp:
+            root = Path(temp)
+            input_root = root / "input"
+            custom_root = root / "other_materials"
+            (input_root / "vc_director").mkdir(parents=True)
+            custom_root.mkdir()
+            image = input_root / "vc_director/hero.png"
+            image.write_bytes(b"uploaded reference image; this test checks registration, not decoding")
+            (custom_root / "voice.wav").write_bytes(b"reference voice")
+            folder_paths = types.ModuleType("folder_paths")
+            folder_paths.get_annotated_filepath = Mock(return_value=str(image.resolve()))
+            entries = [dict(id="hero_image", kind="image", locator="vc_director/hero.png [input]"),
+                       dict(id="hero_voice", kind="audio", locator="voice.wav")]
+            with patch.dict(sys.modules, {"folder_paths": folder_paths}):
+                shared, fingerprint = VCDirectorAssetRegistry().build(json.dumps(entries), str(custom_root))
+            folder_paths.get_annotated_filepath.assert_called_once_with("vc_director/hero.png [input]")
+            self.assertEqual(shared["assets"][0]["locator"], str(image.resolve()))
+            self.assertEqual(shared["assets"][1]["locator"], "voice.wav")
+            self.assertEqual(shared["fingerprint"], fingerprint)
+            doc = english_document()
+            doc["actors"][0]["image_asset_id"] = "hero_image"
+            compiled = compile_fixture(doc, shared["assets"])
+            self.assertEqual(compiled.execution["segments"][0]["reference_bindings"],
+                             [dict(asset_id="hero_image", role="identity", token="<Picture 1>")])
 
 
 class RuntimeTests(unittest.TestCase):

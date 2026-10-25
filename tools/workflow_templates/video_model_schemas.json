@@ -1,0 +1,655 @@
+{
+  "MiniMaxH3HybridLoader": {
+    "input": {
+      "required": {
+        "base_model": [
+          [
+            "<installed model>"
+          ],
+          {
+            "tooltip": "Primary checkpoint -- every tensor starts here."
+          }
+        ],
+        "overlay_model": [
+          [
+            "<installed model>"
+          ],
+          {
+            "tooltip": "Secondary checkpoint -- tensors matched by overlay_preset come from here. May equal base_model (effectively loads base only)."
+          }
+        ],
+        "overlay_preset": [
+          [
+            "none",
+            "ref2va_adaln_over_fl2va",
+            "ref2va_all_adaln_over_fl2va",
+            "ref2va_full_over_fl2va",
+            "fl2va_full_over_ref2va",
+            "block_range_adaln",
+            "custom"
+          ],
+          {
+            "default": "block_range_adaln",
+            "tooltip": "Which tensor groups to take from overlay_model. 'none' = pure base loading (equivalent to stock UNETLoader). 'ref2va_adaln_over_fl2va' (default) = take per-block adaln_proj from the overlay only. 'ref2va_all_adaln_over_fl2va' = also take final_layer.adaln_proj. 'ref2va_full_over_fl2va'/'fl2va_full_over_ref2va' = take everything from the overlay (sanity check). 'block_range_adaln' = take adaln_proj only for blocks in [block_range_start, block_range_end] (inclusive). 'custom' = use custom_overlays only."
+          }
+        ]
+      },
+      "optional": {
+        "block_range_start": [
+          "INT",
+          {
+            "default": 25,
+            "min": 0,
+            "max": 49,
+            "step": 1,
+            "tooltip": "Only used when overlay_preset == 'block_range_adaln'. Lower-inclusive bound on the block index whose adaln_proj comes from overlay_model. The minimax h3 DiT has 50 blocks indexed 0..49."
+          }
+        ],
+        "block_range_end": [
+          "INT",
+          {
+            "default": 49,
+            "min": 0,
+            "max": 49,
+            "step": 1,
+            "tooltip": "Only used when overlay_preset == 'block_range_adaln'. Upper-inclusive bound on the block index. Set block_range_end < block_range_start to take NO blocks from the overlay (effectively pure base)."
+          }
+        ],
+        "final_adaln_from_overlay": [
+          "BOOLEAN",
+          {
+            "default": false,
+            "tooltip": "Toggle overlay of final_layer.adaln_proj.linear.{weight,bias} from overlay_model. Additive on top of any preset:  - False (default): leave final_layer.adaln on the base (unless a preset already covers it, e.g. ref2va_all_adaln_over_fl2va).  - True: pull final_layer.adaln from the overlay in addition to whatever the preset does."
+          }
+        ],
+        "custom_overlays": [
+          "STRING",
+          {
+            "multiline": false,
+            "default": "",
+            "tooltip": "Comma-separated keys/prefixes/globs to *also* take from the overlay on top of the preset. E.g. 'blocks.49.,final_layer.video_out.'. Bare prefixes ending in '.' match by prefix; other strings are matched as fnmatch globs (e.g. 'blocks.[0-4].*.attn.qkv_proj.weight')."
+          }
+        ],
+        "custom_base": [
+          "STRING",
+          {
+            "multiline": false,
+            "default": "",
+            "tooltip": "Comma-separated keys/prefixes/globs that should be forced *back* to the base even if the preset or custom_overlays would take them from the overlay. Useful for keeping e.g. final_layer.adaln_proj on the base while everything else adaln comes from the overlay."
+          }
+        ],
+        "weight_dtype": [
+          [
+            "default",
+            "fp8_e4m3fn",
+            "fp8_e4m3fn_fast",
+            "fp8_e5m2"
+          ],
+          {
+            "default": "default",
+            "advanced": true,
+            "tooltip": "Same meaning as the stock 'Load Diffusion Model' node. Leave 'default' unless you know what you are doing."
+          }
+        ]
+      }
+    },
+    "output": [
+      "MODEL"
+    ],
+    "output_name": [
+      "model"
+    ]
+  },
+  "LoraLoaderModelOnly": {
+    "input": {
+      "required": {
+        "model": [
+          "MODEL"
+        ],
+        "lora_name": [
+          [
+            "<installed model>"
+          ]
+        ],
+        "strength_model": [
+          "FLOAT",
+          {
+            "default": 1.0,
+            "min": -100.0,
+            "max": 100.0,
+            "step": 0.01
+          }
+        ]
+      }
+    },
+    "output": [
+      "MODEL"
+    ],
+    "output_name": [
+      "MODEL"
+    ]
+  },
+  "ModelAttentionBackend": {
+    "input": {
+      "required": {
+        "model": [
+          "MODEL",
+          {
+            "tooltip": "The model to patch."
+          }
+        ],
+        "attention": [
+          "COMBO",
+          {
+            "display_name": "backend",
+            "tooltip": "The dense attention backend. Comfy Kitchen attention uses quantized INT8 attention and is available only on Nvidia and AMD GPUs.",
+            "default": "pytorch attention",
+            "multiselect": false,
+            "options": [
+              "pytorch attention",
+              "comfy kitchen attention"
+            ]
+          }
+        ]
+      }
+    },
+    "output": [
+      "MODEL"
+    ],
+    "output_name": [
+      "model"
+    ]
+  },
+  "BlockSparseAttention": {
+    "input": {
+      "required": {
+        "model": [
+          "MODEL",
+          {
+            "tooltip": "The model to patch."
+          }
+        ],
+        "selection": [
+          "COMFY_DYNAMICCOMBO_V3",
+          {
+            "display_name": "method",
+            "tooltip": "Method used to choose key blocks for full token-level attention. sol-attn: Sparsifying Online Attention uses a training-free adaptive threshold for each attention head and query block. sla: Sparse-Linear Attention keeps a fixed percentage of the highest-scoring key blocks; use only with model weights trained for this pattern. vsa: Video Sparse Attention (FastVideo) uses 3D video-cube tiling and a learned coarse attention branch; requires FastH3 model weights.",
+            "options": [
+              {
+                "key": "sol-attn",
+                "inputs": {
+                  "required": {
+                    "tau": [
+                      "FLOAT",
+                      {
+                        "tooltip": "Threshold in score-distribution sigmas. Higher is sparser: 1.0 keeps ~16% of key blocks exact, 1.5 ~7%, 2.0 ~2.7%.",
+                        "default": 1.3,
+                        "min": 0.0,
+                        "max": 4.0,
+                        "step": 0.05
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "key": "sla",
+                "inputs": {
+                  "required": {
+                    "keep_percent": [
+                      "FLOAT",
+                      {
+                        "tooltip": "Percent of key blocks each query block keeps exactly (sinks and the diagonal ride on top). The selection SLA-style LoRAs are distilled against; without such a LoRA higher is closer to dense.",
+                        "default": 10.0,
+                        "min": 0.5,
+                        "max": 95.0,
+                        "step": 0.5
+                      }
+                    ]
+                  }
+                }
+              },
+              {
+                "key": "vsa",
+                "inputs": {
+                  "required": {
+                    "keep_percent": [
+                      "FLOAT",
+                      {
+                        "tooltip": "Percent of video cubes each query cube keeps; FastH3-VSA checkpoints are trained at 10. Uses the model's to_gate_compress layers for the coarse branch when present.",
+                        "default": 10.0,
+                        "min": 0.5,
+                        "max": 95.0,
+                        "step": 0.5
+                      }
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "start_percent": [
+          "FLOAT",
+          {
+            "tooltip": "Percentage point when sparse attention begins. Before this point, attention stays dense.",
+            "default": 0.2,
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
+          }
+        ],
+        "end_percent": [
+          "FLOAT",
+          {
+            "tooltip": "Percentage point when sparse attention ends. After this point, attention returns to dense.",
+            "default": 1.0,
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01
+          }
+        ],
+        "dense_blocks": [
+          "STRING",
+          {
+            "tooltip": "Transformer blocks that always run dense, e.g. '0, 1, 47-49'.",
+            "advanced": true,
+            "default": "",
+            "multiline": false
+          }
+        ],
+        "min_tokens": [
+          "INT",
+          {
+            "tooltip": "Sequences shorter than this stay dense.",
+            "advanced": true,
+            "default": 12288,
+            "min": 0,
+            "max": 1048576,
+            "step": 512
+          }
+        ],
+        "extra_tokens": [
+          "INT",
+          {
+            "tooltip": "Extra top-scoring tokens each query block attends beyond its selected blocks. Closer to dense for more attention time; 256 recommended, 0 disables. Ignored for VSA.",
+            "advanced": true,
+            "default": 256,
+            "min": 0,
+            "max": 256,
+            "step": 64
+          }
+        ],
+        "sink_conditioning": [
+          "COMBO",
+          {
+            "tooltip": "MiniMax-H3 only. exact_kv: every query attends the packed text/audio/reference rows exactly (~3% cost). exact_kv_and_rows: additionally runs the target-audio query rows dense (keeps generated audio intact).",
+            "advanced": true,
+            "default": "exact_kv_and_rows",
+            "multiselect": false,
+            "options": [
+              "exact_kv",
+              "exact_kv_and_rows",
+              "off"
+            ]
+          }
+        ],
+        "verbose": [
+          "BOOLEAN",
+          {
+            "tooltip": "Logs whether each attention shape used sparse attention or why it stayed dense.",
+            "advanced": true,
+            "default": false
+          }
+        ]
+      }
+    },
+    "output": [
+      "MODEL"
+    ],
+    "output_name": [
+      "model"
+    ]
+  },
+  "SpectrumApplyMiniMaxH3": {
+    "input": {
+      "required": {
+        "model": [
+          "MODEL"
+        ],
+        "enabled": [
+          "BOOLEAN",
+          {
+            "default": true
+          }
+        ],
+        "blend_weight": [
+          "FLOAT",
+          {
+            "default": 0.5,
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01,
+            "tooltip": "Direct video spectral share. Audio uses the separate audio_blend_weight setting. In ordinary single-pass H3, video forecasts can still affect later audio through joint transformer calls."
+          }
+        ],
+        "degree": [
+          "INT",
+          {
+            "default": 1,
+            "min": 1,
+            "max": 16,
+            "step": 1,
+            "tooltip": "Polynomial degree. Values other than 1 disable bootstrap_first_forecast."
+          }
+        ],
+        "ridge_lambda": [
+          "FLOAT",
+          {
+            "default": 0.1,
+            "min": 0.0,
+            "max": 10.0,
+            "step": 0.01
+          }
+        ],
+        "window_size": [
+          "FLOAT",
+          {
+            "default": 2.0,
+            "min": 1.0,
+            "max": 16.0,
+            "step": 0.05
+          }
+        ],
+        "flex_window": [
+          "FLOAT",
+          {
+            "default": 0.75,
+            "min": 0.0,
+            "max": 8.0,
+            "step": 0.05
+          }
+        ],
+        "warmup_steps": [
+          "INT",
+          {
+            "default": 1,
+            "min": 0,
+            "max": 64,
+            "step": 1,
+            "tooltip": "Initial native solver steps. Values above 1 disable bootstrap_first_forecast."
+          }
+        ],
+        "tail_actual_steps": [
+          "INT",
+          {
+            "default": 1,
+            "min": 0,
+            "max": 64,
+            "step": 1,
+            "tooltip": "Requested final native tail. RES does not add a hidden tail floor; its separate one-actual post-forecast refresh remains enforced. ER-SDE offline replay promotes only a penultimate step that the normal schedule would forecast, preserving a future exact terminal anchor without a blanket two-step tail."
+          }
+        ],
+        "max_history": [
+          "INT",
+          {
+            "default": 8,
+            "min": 2,
+            "max": 64,
+            "step": 1
+          }
+        ],
+        "debug": [
+          "BOOLEAN",
+          {
+            "default": false
+          }
+        ]
+      },
+      "optional": {
+        "history_storage": [
+          [
+            "system_ram",
+            "vram"
+          ],
+          {
+            "default": "system_ram",
+            "tooltip": "Storage for the bounded causal history, capped by max_history. Offline replay uses the separate offline_archive_storage setting."
+          }
+        ],
+        "bootstrap_first_forecast": [
+          "BOOLEAN",
+          {
+            "default": true,
+            "tooltip": "Forecast solver step 1 from the actual step-0 feature. Requires degree=1 and warmup_steps<=1; incompatible settings disable it with a console warning."
+          }
+        ],
+        "anchor_residual_feedback": [
+          "BOOLEAN",
+          {
+            "default": false,
+            "tooltip": "Experimental video-scored actual-refresh guard; never injects a hidden residual. Disable offline_smoothing_replay before enabling this mode."
+          }
+        ],
+        "selective_rollback_correction": [
+          "BOOLEAN",
+          {
+            "default": false,
+            "tooltip": "Experimental thresholded, budgeted rollback for the reviewed deterministic Euler sampler only. Disable offline_smoothing_replay before enabling this mode."
+          }
+        ],
+        "offline_smoothing_replay": [
+          "BOOLEAN",
+          {
+            "default": true,
+            "tooltip": "Compatibility-safe default and historically validated H3 audio/stutter path: capture a local-only trajectory, then apply configured blends using past and future anchors without causal video-to-audio feedback. It uses a second sampler pass and retains every actual anchor. Current controlled native ER-SDE testing favored full single-pass for one recurring temporal facial artifact; replay remains supported."
+          }
+        ],
+        "audio_blend_weight": [
+          "FLOAT",
+          {
+            "default": 0.0,
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01,
+            "tooltip": "Direct audio spectral share. The default 0 prevents spectral mixing of audio rows. The default offline replay path also isolates capture from video-to-audio trajectory coupling."
+          }
+        ],
+        "offline_archive_storage": [
+          [
+            "system_ram",
+            "vram"
+          ],
+          {
+            "default": "system_ram",
+            "tooltip": "Storage for every actual anchor retained until offline replay completes. This archive is not capped by max_history. Keep system_ram for constrained GPUs; vram is an explicit speed/memory tradeoff."
+          }
+        ],
+        "model_aware_mode": [
+          [
+            "off",
+            "schedule",
+            "schedule_confidence",
+            "full"
+          ],
+          {
+            "default": "off",
+            "tooltip": "Experimental model/patch-aware scheduling and confidence. 'schedule' may replace risky forecasts with actual evaluations. 'schedule_confidence' also adapts ridge regularization, usable degree, and spectral share without applying a correction. 'full' additionally applies the bounded generic latest-delta residual correction. Current controlled native ER-SDE testing prefers full single-pass among the compared model-aware quality modes. No equivalent conclusion is established for other samplers. The correction itself adds no denoiser forward."
+          }
+        ],
+        "model_aware_risk_threshold": [
+          "FLOAT",
+          {
+            "default": 0.65,
+            "min": 0.0,
+            "max": 1.0,
+            "step": 0.01,
+            "tooltip": "Advanced threshold for converting a prospective forecast into an actual model evaluation. Lower values are more conservative and may spend more NFEs."
+          }
+        ],
+        "model_aware_trust_shrinkage": [
+          "BOOLEAN",
+          {
+            "default": false,
+            "tooltip": "Experimental research/reproduction switch for model_aware_mode='full'. The supported default is false and current native ER-SDE perceptual A/B testing does not recommend promotion. Offline replay keeps the rejected causal-kappa transfer disabled and uses shadow-only diagnostics. No transformer evaluation is added."
+          }
+        ],
+        "model_aware_replay_generic_correction": [
+          "BOOLEAN",
+          {
+            "default": false,
+            "tooltip": "Offline replay-only legacy/ablation switch for model_aware_mode='full'. False is the supported default: do not transplant the causal PR #39 latest-delta scalar onto the different future-bracket replay direction. True explicitly restores that old replay transfer for regression/scientific reproduction. The causal PR #39 correction, validation attenuation, local/spectral blending, scheduling, and transformer NFE are unchanged."
+          }
+        ],
+        "generic_correction_mode": [
+          [
+            "legacy",
+            "coordinate_rls",
+            "coordinate_rls_reliability",
+            "regional"
+          ],
+          {
+            "default": "coordinate_rls",
+            "tooltip": "Full-mode correction controller. coordinate_rls is the validated default from three-run hidden-space and decoded-media ER-SDE evidence. Legacy retains the exact previous EWMA path for reproduction. Regional mode remains experimental. No mode adds a transformer evaluation."
+          }
+        ],
+        "generic_correction_limiter": [
+          [
+            "rational",
+            "hard_clip",
+            "tanh"
+          ],
+          {
+            "default": "hard_clip",
+            "tooltip": "Generic-correction gain limiter. hard_clip with limit 0.40 is the validated full-mode default. rational with 0.25 remains the exact legacy reproduction setting."
+          }
+        ],
+        "generic_correction_limit": [
+          "FLOAT",
+          {
+            "default": 0.4,
+            "min": 0.01,
+            "max": 1.0,
+            "step": 0.01,
+            "tooltip": "Symmetric gain-limit scale. 0.40 is validated with coordinate_rls/hard_clip; use 0.25 with legacy/rational/mode_default for the previous exact baseline."
+          }
+        ],
+        "generic_correction_attenuation": [
+          [
+            "mode_default",
+            "no_attenuation",
+            "general_confidence",
+            "correction_reliability",
+            "combined_conservative"
+          ],
+          {
+            "default": "no_attenuation",
+            "tooltip": "Full-mode attenuation policy. no_attenuation is the validated coordinate_rls default. mode_default with legacy exactly preserves the previous correction path. This setting adds no transformer evaluation."
+          }
+        ],
+        "sa_pece_forecast_policy": [
+          [
+            "max_speed",
+            "balanced",
+            "stable_start"
+          ],
+          {
+            "default": "balanced",
+            "tooltip": "Active SA-Solver PECE only. balanced is the released default after matched production testing; it keeps P0/P1 exact (clean 10-step topology: 11 actual / 8 forecast). max_speed protects only P0 (10/9) and trades one more actual evaluation for speed, while stable_start keeps P0/P1/P2 exact (12/7). Continuum, hard patch transitions, fallbacks, force-actual conditions, and a larger warmup_steps value always remain authoritative."
+          }
+        ]
+      }
+    },
+    "output": [
+      "MODEL"
+    ],
+    "output_name": [
+      "model"
+    ]
+  },
+  "ModelPatchTorchSettings": {
+    "input": {
+      "required": {
+        "model": [
+          "MODEL"
+        ],
+        "enable_fp16_accumulation": [
+          "BOOLEAN",
+          {
+            "default": false,
+            "tooltip": "Enable torch.backends.cuda.matmul.allow_fp16_accumulation, requires pytorch 2.7.0 nightly."
+          }
+        ]
+      }
+    },
+    "output": [
+      "MODEL"
+    ],
+    "output_name": [
+      "MODEL"
+    ]
+  },
+  "CLIPLoader": {
+    "input": {
+      "required": {
+        "clip_name": [
+          [
+            "<installed model>"
+          ]
+        ],
+        "type": [
+          [
+            "stable_diffusion",
+            "stable_cascade",
+            "sd3",
+            "stable_audio",
+            "mochi",
+            "ltxv",
+            "pixart",
+            "cosmos",
+            "lumina2",
+            "wan",
+            "hidream",
+            "chroma",
+            "ace",
+            "omnigen2",
+            "qwen_image",
+            "hunyuan_image",
+            "flux2",
+            "ovis",
+            "longcat_image",
+            "cogvideox",
+            "lens",
+            "pixeldit",
+            "ideogram4",
+            "boogu",
+            "krea2",
+            "joyimage",
+            "mage",
+            "minimax",
+            "yue2",
+            "flux3",
+            "moss_image"
+          ]
+        ]
+      },
+      "optional": {
+        "device": [
+          [
+            "default",
+            "cpu"
+          ],
+          {
+            "advanced": true
+          }
+        ]
+      }
+    },
+    "output": [
+      "CLIP"
+    ],
+    "output_name": [
+      "CLIP"
+    ]
+  }
+}

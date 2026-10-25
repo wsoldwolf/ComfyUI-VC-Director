@@ -22,9 +22,14 @@ def _prose(text, path, actor_ids=None, cues=False, music_allowed=True):
     if cues:
         # Check clauses separately so a negative in one clause cannot authorize another.
         for clause in re.split(r"[。.!?！？;；\n]", text):
-            positive = re.search(r"発声|読み上げ|叫[ぶび]|歌[うい唱]|鼻歌|笑い声|囁[くき]|呟[くき]|台詞|ナレーション|ため息|\b(?:speech|narrat\w*|sing(?:s|ing)?|humm?ing|screams?|whispers?|says?|speaks?|vocali[sz]\w*|sighs?|groans?|laughing)\b", clause, re.I)
+            positive = re.search(r"発声|読み上げ|叫[ぶび]|歌[うい唱]|鼻歌|笑い声|囁[くき]|呟[くき]|話[すし]|喋[るり]|"
+                                 r"(?:言葉|挨拶|返事|名前|感謝|謝罪|お礼|本音)を口に(?:す|し)|声を(?:出|上げ|あげ|発)|"
+                                 r"台詞|ナレーション|ため息|\b(?:speech|narrat\w*|sing(?:s|ing)?|humm?ing|screams?|whispers?|says?|speaks?|vocali[sz]\w*|sighs?|groans?|laughing)\b", clause, re.I)
             negative = re.search(r"なし|禁止|しない|出さない|無言|no\b|without\b|silent\b|never\b|not\b", clause, re.I)
-            require(not positive or bool(negative), "VOCAL_CUE", path, "Place vocal requests only in explicit DIALOGUE events")
+            require(not positive or bool(negative), "VOCAL_CUE", path,
+                    f"Remove vocal description {positive[0]!r} from this prose field; describe visible actions only. "
+                    "Keep the exact authored speech in explicit DIALOGUE events, and do not remove or rewrite those events."
+                    if positive else "Place vocal requests only in explicit DIALOGUE events")
             music = re.search(r"(?:BGM|音楽|伴奏).*(?:流[れす]|鳴[るら]|演奏)|\b(?:music|soundtrack)\s+(?:starts?|plays?|begins?)\b", clause, re.I)
             require(music_allowed or not music or bool(negative), "MUSIC_CUE", path, "Music is forbidden in this Scene")
 
@@ -93,15 +98,22 @@ def validate_story(document):
             require(len(state_keys) == len(set(state_keys)), "STATE", path, "Duplicate state")
             require(all(s["owner_id"] in scene["actor_ids"] + ["environment"] for s in scene[key]), "STATE", path, "Unknown state owner")
         validate_audio(scene["audio"], path, beat["audio"])
-        for text in [scene["summary"], backgrounds[scene["background_id"]]["description"]] + document["direction"] + [s["text"] for s in scene["subject_descriptions"]]:
-            _prose(text, path, scene["actor_ids"], cues=True, music_allowed=scene["audio"]["bgm"] != "none")
+        prose = [(scene["summary"], f"{path}/summary"),
+                 (backgrounds[scene["background_id"]]["description"], f"backgrounds/{scene['background_id']}/description")]
+        prose.extend((text, f"direction/{index}") for index, text in enumerate(document["direction"]))
+        prose.extend((subject["text"], f"{path}/subject_descriptions/{index}/text") for index, subject in enumerate(scene["subject_descriptions"]))
+        for text, field_path in prose:
+            _prose(text, field_path, scene["actor_ids"], cues=True, music_allowed=scene["audio"]["bgm"] != "none")
         for key in ("bgm_description", "ambience_description", "effects_description"):
             if scene["audio"][key]:
-                _prose(scene["audio"][key], path, scene["actor_ids"], cues=True)
+                _prose(scene["audio"][key], f"{path}/audio/{key}", scene["actor_ids"], cues=True)
         endpoint, local_events, spoken = 0, {}, []
         for shot in scene["shots"]:
             shot_ids.append(shot["id"])
-            require(shot["start_ms"] == endpoint and shot["start_ms"] < shot["end_ms"] <= duration, "SHOT_COVERAGE", shot["id"], "Shots must cover the Scene without gaps")
+            require(shot["start_ms"] == endpoint and shot["start_ms"] < shot["end_ms"] <= duration, "SHOT_COVERAGE", shot["id"],
+                    f"Shot must start at {endpoint}ms and end in ({endpoint}, {duration}]ms, relative to Scene start; "
+                    f"received {shot['start_ms']}..{shot['end_ms']}ms. Repartition earlier Shots to leave time for all events, "
+                    f"or use one Shot spanning 0..{duration}ms. Zero-length Shots are forbidden.")
             endpoint = shot["end_ms"]
             for e in shot["events"]:
                 event_ids.append(e["id"])

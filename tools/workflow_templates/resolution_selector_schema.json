@@ -1,0 +1,67 @@
+{
+  "ResolutionSelector": {
+    "input": {
+      "required": {
+        "aspect_ratio": [
+          "COMBO",
+          {
+            "tooltip": "The aspect ratio for the output dimensions.",
+            "default": "1:1 (Square)",
+            "multiselect": false,
+            "options": [
+              "1:1 (Square)",
+              "2:3 (Portrait Photo)",
+              "3:2 (Photo)",
+              "3:4 (Portrait Standard)",
+              "4:3 (Standard)",
+              "9:16 (Portrait Widescreen)",
+              "16:9 (Widescreen)",
+              "21:9 (Ultrawide)"
+            ]
+          }
+        ],
+        "megapixels": [
+          "FLOAT",
+          {
+            "tooltip": "Target total megapixels. 1.0 MP ≈ 1024x1024 for square.",
+            "default": 1.0,
+            "min": 0.1,
+            "max": 16.0,
+            "step": 0.1
+          }
+        ],
+        "multiple": [
+          "INT",
+          {
+            "tooltip": "Nearest multiple of the result to set the selected resolution to.",
+            "advanced": true,
+            "default": 8,
+            "min": 8,
+            "max": 128,
+            "step": 4
+          }
+        ]
+      },
+      "optional": {
+        "preview": [
+          "RESOLUTION_PREVIEW",
+          {
+            "tooltip": "Live preview of the calculated output resolution.",
+            "socketless": true,
+            "ratio_widget": "aspect_ratio",
+            "megapixels_widget": "megapixels",
+            "multiple_widget": "multiple"
+          }
+        ]
+      }
+    },
+    "output": [
+      "INT",
+      "INT"
+    ],
+    "output_name": [
+      "width",
+      "height"
+    ]
+  }
+}

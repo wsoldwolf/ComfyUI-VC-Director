@@ -40,7 +40,11 @@ class GemmaBackend:
         self._identity = dict(model_sha256=hasher.hexdigest(), model_name=self.model_path.name, runtime=self.config.to_dict())
         return self._identity
 
-    def complete(self, system, request):
+    def complete_record(self, system, request, record_type, slot=1, *, payload_schema=None):
+        from ..protocols.grammar import record_grammar
+        return self.complete(system, request, grammar=record_grammar(record_type, slot, payload_schema=payload_schema))
+
+    def complete(self, system, request, *, grammar=None):
         with _LOCK:
             try:
                 interrupt()
@@ -49,8 +53,9 @@ class GemmaBackend:
                 # Reserve output and chat-template overhead. Mandatory source is never truncated.
                 build_context_budget(count.count + 256, self.config.max_tokens,
                                      self.lifecycle.effective_n_ctx or self.config.n_ctx, estimated=count.estimated)
-                response = self.lifecycle.complete_chat([dict(role="system", content=system), dict(role="user", content=request)], self.config, interrupt_callback=interrupt)
-                self.trace.append(dict(request_sha256=digest(request), system_sha256=digest(system), response=response, input_tokens=count.count, estimated=count.estimated))
+                response = self.lifecycle.complete_chat([dict(role="system", content=system), dict(role="user", content=request)], self.config, interrupt_callback=interrupt, grammar=grammar)
+                self.trace.append(dict(request_sha256=digest(request), system_sha256=digest(system), response=response, input_tokens=count.count, estimated=count.estimated,
+                                       grammar_sha256=digest(grammar) if grammar else None))
                 return response
             except BaseException:
                 self.lifecycle.clear()

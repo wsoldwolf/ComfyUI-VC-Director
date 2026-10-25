@@ -3,7 +3,7 @@ from pathlib import Path
 from ...core.artifacts.assets import registry
 from ...core.errors import require
 from ...core.artifacts.storage import load
-from ...core.utilities import canonical, digest
+from ...core.utilities import canonical, digest, pretty_json
 from ..common import CATEGORY, _guard
 
 
@@ -28,4 +28,4 @@ class VCDirectorLoad:
         result = load(project_directory, registry["root"], runtime_root)
         require(result.execution["assets"] == registry["assets"], "REGISTRY_MISMATCH", "/", "Materials differ from the saved run")
         fingerprint = digest(canonical(dict(plan=result.plan, execution=result.execution)))
-        return canonical(result.plan), result, fingerprint
+        return pretty_json(result.plan), result, fingerprint

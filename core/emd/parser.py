@@ -139,11 +139,17 @@ def parse(text):
                 project["scenario_sha256"] = _nullable(_value(records, "元シナリオhash"))
         elif re.fullmatch("人物 @" + ID, title) and block.level == 1:
             records, _ = block.records({"名前", "特徴", "画像", "動画", "声質音声"})
-            actors.append(dict(id=title[4:], name=_value(records, "名前", required=True), description=_value(records, "特徴", required=True),
-                               image_asset_id=_nullable(_value(records, "画像")), video_asset_id=_nullable(_value(records, "動画")), voice_asset_id=_nullable(_value(records, "声質音声"))))
+            description, image_id = _value(records, "特徴", ""), _nullable(_value(records, "画像"))
+            require(bool(description.strip()) or (not is_scene and image_id is not None), "MISSING_FIELD", title + "/特徴",
+                    "特徴を記述してください。シナリオで画像を指定しVisionまたはimage_factsで補完する場合は省略できます。")
+            actors.append(dict(id=title[4:], name=_value(records, "名前", required=True), description=description,
+                               image_asset_id=image_id, video_asset_id=_nullable(_value(records, "動画")), voice_asset_id=_nullable(_value(records, "声質音声"))))
         elif re.fullmatch("背景 " + ID, title) and block.level == 1:
             records, _ = block.records({"画像", "情景"})
-            backgrounds.append(dict(id=title[3:], description=_value(records, "情景", required=True), image_asset_id=_nullable(_value(records, "画像"))))
+            description, image_id = _value(records, "情景", ""), _nullable(_value(records, "画像"))
+            require(bool(description.strip()) or (not is_scene and image_id is not None), "MISSING_FIELD", title + "/情景",
+                    "情景を記述してください。シナリオで画像を指定しVisionまたはimage_factsで補完する場合は省略できます。")
+            backgrounds.append(dict(id=title[3:], description=description, image_asset_id=image_id))
         elif title == "シナリオ" and not is_scene and block.level == 1:
             require(not any(t.strip() for _, t in block.lines), "EMD_FIELD", title, "Place prose inside a 展開")
             scenario_count += 1

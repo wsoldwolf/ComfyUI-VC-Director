@@ -10,7 +10,7 @@ if __package__ in (None, ""):
 from vc_director.core.artifacts.assets import registry
 from vc_director.core.compiler import compile_scene_emd
 from vc_director.core.emd import parse, render_scene
-from vc_director.core.errors import VCError
+from vc_director.core.errors import VCError, require
 from vc_director.core.inference import GemmaBackend, GemmaTranslator, runtime_config
 from vc_director.core.protocols import StageRunner
 from vc_director.core.direction import StoryEnhancer
@@ -47,21 +47,26 @@ def main(argv=None):
             document = validate_story(parse(text))
             print(document["schema"] + " " + document["project_id"])
             return 0
+        if args.command == "plan":
+            scenario = parse(text)
+            require(scenario["schema"] == "VCD_SCENARIO_V1", "INPUT_KIND", "emd",
+                    "planにはVCD_SCENARIO_EMD_V1のシナリオが必要です。シーンEMDにはcompileを使ってください。")
         entries = json.loads(args.assets.read_text(encoding="utf-8")) if args.assets else []
         shared = registry(entries, args.asset_root)
         details, scenario_text = {}, None
         if args.model:
             backend = GemmaBackend(args.model, runtime_config("planner" if args.command == "plan" else "compiler"))
         if args.command == "plan":
-            runner = StageRunner(backend, args.cache)
-            scenario = parse(text)
+            runner = StageRunner(backend, args.cache, diagnostics_root=args.output / scenario["project_id"] / "diagnostics")
             enhanced = StoryEnhancer(runner).enhance(scenario)
             document = StoryTimelinePlanner(runner).plan(scenario, enhanced)
             scenario_text, text = text, render_scene(document)
             details = dict(planning_trace=runner.trace, enhanced_story=enhanced, planning_model=runner._identity)
             backend.close()
             backend = GemmaBackend(args.model, runtime_config("compiler"))
-        result = compile_scene_emd(text, shared["assets"], GemmaTranslator(backend, args.cache / "translation" if args.cache else None) if backend else None)
+        project_id = parse(text)["project_id"]
+        result = compile_scene_emd(text, shared["assets"], GemmaTranslator(backend, args.cache / "translation" if args.cache else None,
+                                   diagnostics_root=args.output / project_id / "diagnostics") if backend else None)
         details["translation_model"] = backend.identity() if backend else None
         print(save(result, args.output, scenario_text, details))
         return 0

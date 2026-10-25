@@ -16,6 +16,10 @@
 
 初期実装は`revisions/<revision_hash>/`に上記ファイルをまとめて保存し、作品直下の`run_metadata.json`を有効revisionへのatomic pointerとする。revision内のPlan / executionを直接上書きしない。読込時にファイルhashと翻訳traceによる再コンパイルを照合する。
 
+JSONファイルとノードの`plan_json`出力はUTF-8、日本語非エスケープ、2スペースのインデント、末尾改行付きで出力する。Plan / execution間の参照hashは従来どおりキーをソートした空白なしのcanonical JSONを対象とし、metadataのfilesは保存ファイルの実バイトを対象とする。以前の1行JSONも読込可能とする。
+
+metadataの`prompt_policy_version`は音響指示の生成規則を記録する。新規コンパイルは`vcd-audio-v2`で明示的な音楽禁止を出力する。記録のない旧revisionは`vcd-audio-v1`として再コンパイル照合し、保存済みPlanの再現性を維持する。新しい規則で再生成する場合はScene EMDを再コンパイルし、別revisionを保存する。
+
 ## 2. Compiler
 
 1. シーンEMDを解析し、出演者・背景・依存・許可・時刻を検証する。
@@ -40,6 +44,8 @@ step数はProduction Plan / Generation Profile側で設定する。
 ## 4. executionと再現範囲
 
 型は[データ契約](data-contract.md)、時間は[Contract](timing-and-splitting.md)に従う。各segmentはPlanのshots IDと一致する。rawと採用範囲、eventごとのraw / output時刻、人物・参照番号を保存する。audio_operationsは持たない。
+
+segmentの`audio_output=silence`は全音響なしの作者意図を記録する。現在のWFはこの値で生成済みPCMを無音へ置き換えず、H3の生成音声を保存する。音楽禁止や無音を守ったかは実出力の検証が必要であり、manifestの方針値だけを成功判定に使わない。
 
 素材実体は同一WFの共有レジストリから取得し、hashと接続を照合する。短い参照音声を作品尺と比較して拒否しない。対応していない参照形式は型・runtime条件の不一致として診断する。
 

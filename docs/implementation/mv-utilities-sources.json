@@ -1,0 +1,52 @@
+{
+  "schema": "VCD_MV_SOURCE_PROVENANCE_V1",
+  "source_head": null,
+  "source_head_note": "Git metadata unavailable; exact working-tree bytes recorded by SHA-256.",
+  "source_kind": "local_working_tree_snapshot",
+  "copyright": "Copyright (c) 2026 wsoldwolf",
+  "license": "GPL-3.0-only",
+  "files": [
+    {
+      "source": "nodes/node_seed32/node.py",
+      "source_sha256": "83a5a5717c3dbd46f651b3b9278533c3273ead7c857e1b7d34efab320d378cd2",
+      "target": "nodes/node_seed32/node.py",
+      "status": "adapted",
+      "integrated_sha256": "31d3179f7370e5ed04cb5493d7aad3bad724d55c0e359534a703b35980d20626"
+    },
+    {
+      "source": "nodes/node_seed32/__init__.py",
+      "source_sha256": "9d8122272468b30148b32ec96e42eb19d0c4763556c5aa10e80392b144860ab2",
+      "target": "nodes/node_seed32/__init__.py",
+      "status": "adapted",
+      "integrated_sha256": "91bb388afc291fc065127eccc423bb89f2057eb4db4e10028af9523f1f044b4f"
+    },
+    {
+      "source": "nodes/node_load_text_file/node.py",
+      "source_sha256": "7b625cd0fd73a585baa7fe5d708fb231e984cda696caddcd5163a39e8bfb6a51",
+      "target": "nodes/node_load_text_file/node.py",
+      "status": "adapted",
+      "integrated_sha256": "a5d86a6df8a6370c6bc5997d2db4c23ec8bd6122ecdb65547c799ae8b83d3c41"
+    },
+    {
+      "source": "nodes/node_load_text_file/__init__.py",
+      "source_sha256": "83d04ba769250b58f3fdb4ceac280ac3283e3dde4b0d1f6ca94e0a9ef3206df9",
+      "target": "nodes/node_load_text_file/__init__.py",
+      "status": "adapted",
+      "integrated_sha256": "ed5a287f5ce700d53c718d4397d6b06f8504a9e136e8b99ef3af4e366c61cd83"
+    },
+    {
+      "source": "core/utilities/text_file.py",
+      "source_sha256": "7cd20251ed1ace49e99112aaba9ceb007eb2b5f739c6e59c273d72ccda3d2205",
+      "target": "core/utilities/text_file.py",
+      "status": "integrated",
+      "integrated_sha256": "724be54e882bac1e8bafc5b4c583de2fc3fce27c5f6a87019a0f31514b2b90cd"
+    },
+    {
+      "source": "web/js/utilities.js",
+      "source_sha256": "0c411ed8962fc6f24c3e0b38672a60880c5892d1c987c2c7ffb35c522c7f6e6c",
+      "target": "web/js/utilities.js",
+      "status": "adapted",
+      "integrated_sha256": "d5bb7e61df8a0858f82063c104288d3c62ca36b925cfc938dd07be4a2bd2578d"
+    }
+  ]
+}

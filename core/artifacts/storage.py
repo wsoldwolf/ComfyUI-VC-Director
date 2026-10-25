@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from ..compiler import CompileResult
 from ..errors import require
 from .schema import validate
-from ..utilities import canonical, digest, normalize
+from ..utilities import canonical, digest, normalize, pretty_json
 
 
 def verify_assets(assets, asset_root):
@@ -32,11 +32,11 @@ def save(result: "CompileResult", output_root, scenario_emd=None, run_details=No
     root = Path(output_root) / result.document["project_id"]
     revisions = root / "revisions"
     revisions.mkdir(parents=True, exist_ok=True)
-    contents = {"scenes.emd": result.scene_emd, "plan.json": canonical(result.plan), "execution.json": canonical(result.execution)}
+    contents = {"scenes.emd": result.scene_emd, "plan.json": pretty_json(result.plan), "execution.json": pretty_json(result.execution)}
     if scenario_emd is not None:
         contents["scenario.emd"] = normalize(scenario_emd)
     metadata = dict(result.metadata, run_details=run_details or {}, files={name: digest(text) for name, text in contents.items()})
-    contents["run_metadata.json"] = canonical(metadata)
+    contents["run_metadata.json"] = pretty_json(metadata)
     revision = digest(contents["run_metadata.json"])
     target = revisions / revision
     temporary = Path(tempfile.mkdtemp(prefix=".pending-", dir=revisions))
@@ -50,7 +50,7 @@ def save(result: "CompileResult", output_root, scenario_emd=None, run_details=No
             require(all((target / name).read_bytes() == text.encode("utf-8") for name, text in contents.items()), "REVISION_COLLISION", revision, "Existing immutable revision differs")
         else:
             temporary.rename(target)
-        pointer = canonical(dict(schema="VCD_REVISION_POINTER_V1", active_revision=revision))
+        pointer = pretty_json(dict(schema="VCD_REVISION_POINTER_V1", active_revision=revision))
         fd, pointer_name = tempfile.mkstemp(prefix=".metadata-", dir=root)
         try:
             with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as handle:
@@ -85,10 +85,14 @@ def load(project_root, asset_root=None, runtime_root=None):
         require(hashlib.sha256(raw).hexdigest() == expected, "FILE_HASH", name, "Revision file changed or pair is mixed")
         contents[name] = raw.decode("utf-8")
     require({"plan.json", "execution.json", "scenes.emd"} <= set(contents), "REVISION_FILE", "/", "Incomplete revision")
+    plan = json.loads(contents["plan.json"])
     execution = validate(json.loads(contents["execution.json"]), "execution")
-    require(execution["plan_sha256"] == digest(contents["plan.json"]) and execution["scene_emd_sha256"] == digest(contents["scenes.emd"]), "PAIR_HASH", "/", "Plan, execution and EMD mismatch")
-    require(metadata["execution_sha256"] == digest(contents["execution.json"]), "PAIR_HASH", "/", "Execution hash mismatch")
+    # Cross-artifact hashes describe JSON values; metadata.files verifies exact file bytes.
+    # This accepts both previous compact revisions and the readable serialization.
+    require(execution["plan_sha256"] == digest(canonical(plan)) and execution["scene_emd_sha256"] == digest(contents["scenes.emd"]), "PAIR_HASH", "/", "Plan, execution and EMD mismatch")
+    require(metadata["execution_sha256"] == digest(canonical(execution)), "PAIR_HASH", "/", "Execution hash mismatch")
     from ..compiler import compile_scene_emd
+    from ..compiler.api import LEGACY_PROMPT_POLICY
 
     class ReplayTranslator:
         def __init__(self):
@@ -102,8 +106,9 @@ def load(project_root, asset_root=None, runtime_root=None):
             source = "".join(part + (values[i] if i < len(values) else "") for i, part in enumerate(fragments))
             return self(source)
 
-    replay = compile_scene_emd(contents["scenes.emd"], execution["assets"], ReplayTranslator())
-    require(replay.plan == json.loads(contents["plan.json"]) and replay.execution == execution, "COMPILED_MISMATCH", "/", "Saved artifacts fail deterministic recompilation")
+    replay = compile_scene_emd(contents["scenes.emd"], execution["assets"], ReplayTranslator(),
+                               prompt_policy=metadata.get("prompt_policy_version", LEGACY_PROMPT_POLICY))
+    require(replay.plan == plan and replay.execution == execution, "COMPILED_MISMATCH", "/", "Saved artifacts fail deterministic recompilation")
     if asset_root is not None:
         verify_assets(execution["assets"], asset_root)
     if runtime_root is not None:

@@ -1,0 +1,24 @@
+outlineの全fieldと値を完全にコピーし、subject_descriptions、summary、retention、shots、sound_events、audioだけを追加します。
+Sceneのstart_ms/end_msは作品絶対時刻、shots/events/sound_eventsはSceneの先頭を0とする相対時刻です。
+Shotは0からSceneの全尺を隙間なく覆います。各eventを所属Shotの時刻範囲内に置きます。
+10秒程度の短いSceneは一つのShotにまとめて構いません。複数Shotの場合もevent時刻をShot内で0へ戻しません。例: Shotが4000〜7000msなら、そのeventも4000〜7000ms内です。
+previous_scenesの台詞を繰り返しません。対象beatの最後のSceneには、まだ配置されていない台詞を全て配置します。
+DIALOGUE eventはkind="dialogue"とし、idとdialogue_idの両方へ作者の台詞IDをそのままコピーします。text、actor_id、languageも作者の台詞からコピーします。
+自由な説明文やACTIONへ台詞・発声・音楽の指示を混ぜません。台詞を追加・改変しません。
+summaryは見える動作と情景だけです。summary・subject_descriptions・ACTIONには「」やdタグも、話す・呟く・台詞を言う等の発声説明も書きません。台詞はDIALOGUE eventだけへ配置します。
+summaryの適切な例: 少女が駅を出て周囲を見渡し、懐かしい景色に足を止めて穏やかな表情になる。
+summaryとsubject_descriptionsは簡潔な1〜2文にします。
+「言葉を口にする」「挨拶を口にする」「話す」「声を出す」も発声説明です。summaryやACTIONへ書かず、既存の作者台詞はDIALOGUEだけに配置します。たとえばsummaryは「居間に入り、帽子を脱いで椅子に腰掛け、窓の月を見上げる」とし、帰宅の発声説明を重複させません。
+audioは対象beatの許可を守り、全fieldをSchemaどおりに出力します。発話eventがないSceneのvocalは"none"です。
+対象beatでnoneのBGM・環境音・効果音は、自然に鳴りそうな動作があってもnoneのままです。対応するdescriptionはnullにし、禁止された用途のsound_eventsと音声参照を追加しません。環境音・効果音が両方noneならsound_eventsは[]です。
+修正応答でも、音響許可・台詞・承認済みoutlineを変更しません。時刻エラーを直すために音を追加しません。
+subject_descriptionsとretentionは出演者だけを含めます。retention.modeは"fully_preserved"を使えます。
+
+全てのShotにCAMERA eventを必ず一件以上作り、events配列の先頭をkind="camera"にします。カメラなしでACTIONだけを出してはいけません。
+CAMERAはScene相対時刻です。一件ならそのShotのstart_msからend_msまで全体を覆います。複数件なら開始順に隙間なく分割し、カメラ区間同士を重ねません。ACTION・DIALOGUEとの重なりは許可します。
+作者の方針・固定条件・展開にあるカメラ指定を優先します。指定がない場合は、歩行なら穏やかな追従、視線の先を見せるならパンや構図変更、表情を読むなら緩やかな寄り等を場面に合わせて検討します。『静かな短編映画』は全編固定カメラという意味ではありません。
+固定が適切なら『固定カメラ。中景の位置・画角を保持する』等をCAMERAへ明記します。全Shotを機械的に動かす必要はありません。作者が固定を指示した場合は移動・ズームを追加しません。
+CAMERAのtextには対象・初期構図・移動方向又は固定・速度・終端構図を簡潔に書きます。『映画的』『人物を映す』だけの曖昧な指示で終えません。一つの区間の主な撮影意図を一つに絞り、急ズームや複数方向の回転を重ねません。重要な顔・手・動作が読める構図を保ちます。
+CAMERAのactor_idは出演者ID又はenvironmentです。人物なしのSceneはenvironmentを使います。IDはScene・Shotが分かる一意なものにし、台詞のIDを使い回しません。
+transition="continue"ならprevious_scenesの構図と方向を参考にして接続します。作者が指定しないハードカットや急な切り返しを追加しません。
+カメラを直すために作者の台詞・人物動作・音響許可・承認済みoutlineを変更しません。CAMERAへ発声・歌唱・BGM・効果音の指示を混ぜません。

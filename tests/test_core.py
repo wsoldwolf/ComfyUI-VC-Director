@@ -54,6 +54,16 @@ def compile_fixture(doc=None, assets=(), translator=None):
     return compile_document(doc, emd, assets, translator)
 
 
+def with_camera(scene):
+    result = copy.deepcopy(scene)
+    for shot in result["shots"]:
+        shot["events"].insert(0, dict(id=shot["id"] + "_camera", kind="camera",
+            start_ms=shot["start_ms"], end_ms=shot["end_ms"], actor_id="environment",
+            text="Static medium-wide camera; retain the same position and framing throughout.",
+            dialogue_id=None, language=None))
+    return result
+
+
 class FakeBackend:
     def __init__(self, responses):
         self.responses = iter(responses)
@@ -125,6 +135,20 @@ class EMDTests(unittest.TestCase):
 
 
 class CompilerTests(unittest.TestCase):
+    def test_music_none_is_explicit_in_the_dedicated_section(self):
+        result = compile_fixture()
+        prompt = result.plan["shots"][0]["prompt"]
+        self.assertIn("non_diegetic_music:\nNo non-diegetic music.", prompt)
+        self.assertIn("Dry, isolated spoken dialogue only.", prompt)
+        self.assertNotIn("non_diegetic_music:\nN/A", prompt)
+        doc = english_document()
+        for audio in (doc["audio"], doc["beats"][0]["audio"], doc["scenes"][0]["audio"]):
+            audio.update(bgm="generate", bgm_description="Soft instrumental piano.")
+        prompt = compile_fixture(doc).plan["shots"][0]["prompt"]
+        self.assertIn("non_diegetic_music:\nSoft instrumental piano.", prompt)
+        self.assertNotIn("Dry, isolated spoken dialogue only.", prompt)
+        self.assertNotIn("No non-diegetic music.", prompt)
+
     def test_dialogue_is_preserved_and_never_translated(self):
         seen = []
 
@@ -249,6 +273,65 @@ class CompilerTests(unittest.TestCase):
 
 
 class StorageTests(unittest.TestCase):
+    def test_old_audio_prompt_revision_without_policy_metadata_remains_readable(self):
+        from vc_director.core.compiler.api import LEGACY_PROMPT_POLICY
+        doc = english_document()
+        result = compile_document(doc, render_scene(doc), prompt_policy=LEGACY_PROMPT_POLICY)
+        result.metadata.pop("prompt_policy_version")
+        self.assertIn("non_diegetic_music:\nN/A", result.plan["shots"][0]["prompt"])
+        with temporary_directory() as temp:
+            target = save(result, temp)
+            replay = load(target.parents[1])
+            self.assertEqual(replay.plan, result.plan)
+            self.assertEqual(replay.execution, result.execution)
+            upgraded = compile_document(replay.document, replay.scene_emd)
+            self.assertNotEqual(upgraded.plan, replay.plan)
+            fresh = save(upgraded, temp)
+            self.assertNotEqual(fresh, target)
+            self.assertEqual(load(fresh.parents[1]).plan, upgraded.plan)
+
+    def test_readable_json_preserves_values_and_hash_contracts(self):
+        result = compile_fixture()
+        with temporary_directory() as temp:
+            target = save(result, temp)
+            project = target.parents[1]
+            for path in [*target.glob("*.json"), project / "run_metadata.json"]:
+                raw = path.read_text(encoding="utf-8")
+                value = json.loads(raw)
+                self.assertEqual(raw, json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False) + "\n")
+                self.assertIn('\n  "', raw)
+            raw_plan = (target / "plan.json").read_text(encoding="utf-8")
+            self.assertIn("ただいま", raw_plan)
+            self.assertEqual(json.loads(raw_plan), result.plan)
+            execution = json.loads((target / "execution.json").read_text(encoding="utf-8"))
+            metadata = json.loads((target / "run_metadata.json").read_text(encoding="utf-8"))
+            self.assertEqual(execution["plan_sha256"], digest(canonical(result.plan)))
+            self.assertEqual(metadata["files"]["plan.json"], digest(raw_plan))
+            self.assertNotEqual(metadata["files"]["plan.json"], execution["plan_sha256"])
+            restored = load(project)
+            self.assertEqual(restored.plan, result.plan)
+            self.assertEqual(restored.execution, result.execution)
+
+    def test_previous_compact_revision_remains_readable(self):
+        result = compile_fixture()
+        with temporary_directory() as temp:
+            # Construct the previous on-disk format, including its original hash chain.
+            contents = {"scenes.emd": result.scene_emd, "plan.json": canonical(result.plan), "execution.json": canonical(result.execution)}
+            metadata = dict(result.metadata, run_details={}, files={name: digest(raw) for name, raw in contents.items()})
+            contents["run_metadata.json"] = canonical(metadata)
+            revision = digest(contents["run_metadata.json"])
+            project = Path(temp) / result.document["project_id"]
+            target = project / "revisions" / revision
+            target.mkdir(parents=True)
+            for name, raw in contents.items():
+                (target / name).write_bytes(raw.encode("utf-8"))
+            (project / "run_metadata.json").write_bytes(canonical(dict(schema="VCD_REVISION_POINTER_V1", active_revision=revision)).encode("utf-8"))
+            self.assertEqual(load(project).execution, result.execution)
+            readable = save(result, temp)
+            self.assertNotEqual(readable, target)
+            self.assertEqual((target / "plan.json").read_text(encoding="utf-8"), canonical(result.plan))
+            self.assertEqual(load(project).execution, result.execution)
+
     def test_save_load_and_hash_tampering(self):
         result = compile_fixture()
         with temporary_directory() as temp:
@@ -299,7 +382,7 @@ class PlannerTests(unittest.TestCase):
         scenario = fixture("scenario")
         enhanced = fixture("enhanced-story")
         outline_response = fixture("outline-response")["records"][0]["payload"]
-        detail = fixture("detail-response")["records"][0]["payload"]
+        detail = with_camera(fixture("detail-response")["records"][0]["payload"])
         backend = FakeBackend(["ENHANCED\t1\t" + canonical(enhanced), "SCENES\t1\t" + canonical(outline_response), "DETAIL\t1\t" + canonical(detail)])
         runner = StageRunner(backend)
         actual = StoryEnhancer(runner).enhance(scenario)

@@ -1,0 +1,6 @@
+作者の意図と必須出来事だけを抽出します。シーン構成、Shot、具体的な演技の追加は後の段階で行います。
+project_idはscenario.project_id、scenario_sha256はscenario.source_sha256を一字も変えずコピーします。
+constraintsはscenario.constraintsをそのままコピーします。beatsはscenario.beatsと同じID・同じ順序で各一項です。
+slot=1は作品全体を指します。一つ目のbeatだけで終了せず、入力の全beatを一つのbeats配列へ出力します。beatの省略・追加・統合・並べ替えは禁止です。
+各required_eventsは原文に存在する出来事とし、beat_idと原文のsource行範囲を保持します。演出のための動作を必須出来事として追加しません。
+required_eventsのIDは文書内で一意な英小文字・数字・_を使います。先頭は英小文字です。

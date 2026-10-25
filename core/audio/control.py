@@ -22,7 +22,8 @@ def dialogue(text):
 
 
 def no_speech_markup(text, path):
-    require(not re.search(r"(?<!\\)[「」]|</?d(?:>|\[)", text), "STRAY_DIALOGUE", path, "Move speech into a DIALOGUE record")
+    require(not re.search(r"(?<!\\)[「」]|</?d(?:>|\[)", text), "STRAY_DIALOGUE", path,
+            "Remove quoted dialogue and <d> tags from this prose field. Keep the exact authored speech only in DIALOGUE events; do not remove the DIALOGUE events.")
 
 
 def parse_audio(records, parent=None):
@@ -74,18 +75,24 @@ def validate_audio(policy, path, parent=None):
         require(policy[field] != "none", "AUDIO_REFERENCE", path, f"Reference for disabled {field}")
     if parent:
         for key in ("vocal", "bgm", "ambience", "effects"):
-            require(parent[key] != "none" or policy[key] == "none", "AUDIO_PERMISSION", path, f"Scene widens {key} permission")
+            require(parent[key] != "none" or policy[key] == "none", "AUDIO_PERMISSION", f"{path}/audio/{key}",
+                    f"Parent forbids {key}. Set audio.{key}='none'"
+                    + (f", audio.{key}_description=null and remove related sound_events/references." if key != "vocal" else "; remove unauthorized dialogue events."))
         require(all(r in parent["reference_audio"] for r in policy["reference_audio"]), "AUDIO_PERMISSION", path, "Scene adds an unauthorized reference")
 
 
-def directives(policy):
+def directives(policy, *, explicit=False):
     lines = []
     if all(policy[k] == "none" for k in ("vocal", "bgm", "ambience", "effects")):
         lines.append("Complete silence. No speech, narration, singing, humming, character vocalization, music, ambience or sound effects.")
+        if explicit:
+            lines.append("The audio track is silent for the entire scene, from beginning to end.")
     elif policy["vocal"] == "none":
         lines.append("No speech, narration, singing, humming or character vocalization. Generate only explicitly permitted physical sounds.")
     else:
         lines.append("Only the assigned speaker speaks the exact <d> words during the specified dialogue intervals. No extra words, paraphrasing, repetition, narration, singing, humming or other vocalization. Never read descriptions or reference audio aloud. No vocalization outside dialogue intervals.")
+        if explicit and all(policy[k] == "none" for k in ("bgm", "ambience", "effects")):
+            lines.append("Dry, isolated spoken dialogue only. Silence before and after each utterance. No backing track.")
     if policy["bgm"] == "none":
         lines.append("No background music or diegetic music.")
     else:

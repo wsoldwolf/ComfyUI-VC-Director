@@ -111,10 +111,11 @@ class MaskedField:
 
 
 class WholeFieldTranslator:
-    def __init__(self, lifecycle, *, runtime_config, interrupt_callback=None):
+    def __init__(self, lifecycle, *, runtime_config, interrupt_callback=None, validate_translation=None):
         runtime_config.validate()
         self.lifecycle, self.runtime_config = lifecycle, runtime_config
         self.interrupt_callback = interrupt_callback
+        self.validate_translation = validate_translation
         self.system_prompt = whole_field_prompt()
         self.batch_count = self.estimated_token_batches = 0
         self.trace = []
@@ -138,6 +139,7 @@ class WholeFieldTranslator:
             self.estimated_token_batches += bool(count.estimated)
             row = {"attempt": attempt, "masked_source": field.text,
                    "markers": list(field.markers), "response": response,
+                   "request": payload,
                    "operation": "repair" if previous_response is not None else "translate",
                    "retry_reason": reason}
             self.trace.append(row)
@@ -152,6 +154,8 @@ class WholeFieldTranslator:
                 candidate = parsed.records[0].text
                 row["masked_translation"] = candidate
                 restored = field.restore(candidate)
+                if self.validate_translation is not None:
+                    self.validate_translation(restored)
             except (CompilerError, ProtocolError) as exc:
                 reason = str(exc)
                 row["error"] = reason

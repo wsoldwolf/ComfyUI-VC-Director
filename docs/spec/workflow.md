@@ -46,6 +46,8 @@ VC実行adapterは次を契約する。
 
 既存プラグインへのmonkeypatchは行わない。登録SchemaとPlan正規化の照合は`tools/verify_context_loop.py`で行う。実Queue・生成品質とは別の検証とする。
 
+動画モデルはMV-DirectorのHybrid構成を採用する。FL2VAをbase、Ref2VAをoverlayとし、block 25〜49のAdaLNを重ねる。native Ref2VA conditioningの接続とDiffusion Modelのbase選択は別の設定であり、Ref2VA単独モデルを必須としない。モデル経路はHybrid Loader → Turbo LoRA（Bypass）→ Comfy Kitchen Attention → SLA → Spectrum → FP16 accumulation → Sigma Shiftとする。切替時はモデルpatchを含む動画経路全体をMuteし、有効化時にはLoRAのBypassを維持する。設定・追加依存は[配布WF](../../workflows/README.md#動画モデルと高速化)を正本とする。
+
 Sceneあたりの上限は画像9、動画3、独立音声3を基準とする。paired audioは独立Audio番号に含める。作品全体の登録素材数とは分ける。動画参照はrestart_each_scene、paired audioは明示有効化したときだけ使用する。音声参照と出力音声のコピーは結び付けない。
 
 ## 5. 音声と再開
