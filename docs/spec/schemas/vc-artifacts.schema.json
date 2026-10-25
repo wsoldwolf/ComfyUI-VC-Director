@@ -266,6 +266,19 @@
             "$ref": "#/$defs/audio_reference"
           },
           "minItems": 0
+        },
+        "continuity": {
+          "enum": [
+            "auto",
+            "cut",
+            "continue"
+          ]
+        },
+        "bgm_suppression": {
+          "enum": [
+            "prompt",
+            "negpip"
+          ]
         }
       },
       "required": [
@@ -355,6 +368,21 @@
         },
         "audio": {
           "$ref": "#/$defs/audio_policy"
+        },
+        "direction": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "transition": {
+          "enum": [
+            "auto",
+            "cut",
+            "continue"
+          ]
         }
       },
       "required": [
@@ -1188,6 +1216,13 @@
         "compiler_version": {
           "type": "string",
           "minLength": 1
+        },
+        "independent_audio_contract": {
+          "const": "VCD_CL_AUDIO_GUIDE_V1"
+        },
+        "independent_audio_fingerprint": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
         }
       },
       "required": [

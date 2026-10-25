@@ -167,6 +167,19 @@ def generate(runtime_root):
     link(34, 1, 11, "compiled", "VC_COMPILED")
     link(8, 1, 11, "clip_index", "INT")
     model_stack_hash = apply_video_model_stack(workflow, nodes, link)
+    audio_control = vc_node("VCDirectorAudioControl", 44, [1800, 2050], {}, "video")
+    audio_control["size"] = [420, 220]
+    for wire in workflow["links"]:
+        if wire[1] == 13 and wire[3] in {14, 15}:
+            wire[1], wire[2] = 44, 0
+        elif wire[1] == 2 and wire[3] == 11:
+            wire[1], wire[2] = 44, 1
+    workflow["links"] = [wire for wire in workflow["links"] if not (
+        wire[3] == 24 and nodes[24]["inputs"][wire[4]]["name"] == "generation_fingerprint")]
+    link(13, 0, 44, "model", "MODEL")
+    link(2, 0, 44, "clip", "CLIP")
+    link(34, 1, 44, "compiled", "VC_COMPILED")
+    link(44, 2, 24, "generation_fingerprint", "STRING")
     nodes[24]["pos"] = [80, 1450]
     # clip_index is Current Shot's one-based index (verified below against schema).
     # Rebuild redundant socket linkage arrays from the authoritative links table.

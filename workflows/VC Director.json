@@ -1,8 +1,8 @@
 {
   "id": "f97af838-5222-5864-8ec8-15d657333fdb",
   "revision": 0,
-  "last_node_id": 43,
-  "last_link_id": 72,
+  "last_node_id": 44,
+  "last_link_id": 76,
   "nodes": [
     {
       "id": 1,
@@ -172,7 +172,7 @@
           "name": "CLIP",
           "type": "CLIP",
           "links": [
-            6
+            74
           ]
         }
       ],
@@ -767,8 +767,7 @@
           "name": "MODEL",
           "type": "MODEL",
           "links": [
-            20,
-            22
+            73
           ]
         }
       ],
@@ -1419,7 +1418,7 @@
         {
           "name": "generation_fingerprint",
           "type": "STRING",
-          "link": 64,
+          "link": 76,
           "widget": {
             "name": "generation_fingerprint"
           }
@@ -1879,15 +1878,14 @@
           "name": "compiled",
           "type": "VC_COMPILED",
           "links": [
-            65
+            65,
+            75
           ]
         },
         {
           "name": "generation_fingerprint",
           "type": "STRING",
-          "links": [
-            64
-          ]
+          "links": []
         }
       ],
       "properties": {
@@ -2897,6 +2895,86 @@
       },
       "color": "#223",
       "bgcolor": "#335"
+    },
+    {
+      "id": 44,
+      "type": "VCDirectorAudioControl",
+      "pos": [
+        1800,
+        2050
+      ],
+      "size": [
+        420,
+        220
+      ],
+      "flags": {},
+      "order": 36,
+      "mode": 2,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 73
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "link": 74
+        },
+        {
+          "name": "compiled",
+          "type": "VC_COMPILED",
+          "link": 75
+        },
+        {
+          "name": "value_strength",
+          "type": "FLOAT",
+          "link": null,
+          "widget": {
+            "name": "value_strength"
+          }
+        },
+        {
+          "name": "measure_attention_mass",
+          "type": "BOOLEAN",
+          "link": null,
+          "widget": {
+            "name": "measure_attention_mass"
+          }
+        }
+      ],
+      "outputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "links": [
+            20,
+            22
+          ]
+        },
+        {
+          "name": "clip",
+          "type": "CLIP",
+          "links": [
+            6
+          ]
+        },
+        {
+          "name": "generation_fingerprint",
+          "type": "STRING",
+          "links": [
+            76
+          ]
+        }
+      ],
+      "properties": {
+        "Node name for S&R": "VCDirectorAudioControl",
+        "vcd_group": "video"
+      },
+      "widgets_values": [
+        1.0,
+        false
+      ]
     }
   ],
   "links": [
@@ -2926,8 +3004,8 @@
     ],
     [
       6,
-      2,
-      0,
+      44,
+      1,
       11,
       0,
       "CLIP"
@@ -3014,7 +3092,7 @@
     ],
     [
       20,
-      13,
+      44,
       0,
       14,
       0,
@@ -3030,7 +3108,7 @@
     ],
     [
       22,
-      13,
+      44,
       0,
       15,
       0,
@@ -3349,14 +3427,6 @@
       "STRING"
     ],
     [
-      64,
-      34,
-      2,
-      24,
-      6,
-      "STRING"
-    ],
-    [
       65,
       34,
       1,
@@ -3419,6 +3489,38 @@
       13,
       0,
       "MODEL"
+    ],
+    [
+      73,
+      13,
+      0,
+      44,
+      0,
+      "MODEL"
+    ],
+    [
+      74,
+      2,
+      0,
+      44,
+      1,
+      "CLIP"
+    ],
+    [
+      75,
+      34,
+      1,
+      44,
+      2,
+      "VC_COMPILED"
+    ],
+    [
+      76,
+      44,
+      2,
+      24,
+      6,
+      "STRING"
     ]
   ],
   "groups": [

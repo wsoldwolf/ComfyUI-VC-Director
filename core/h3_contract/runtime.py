@@ -6,7 +6,7 @@ from ..utilities import canonical, digest
 
 
 def conditioning_inputs(result, shared_registry, scene_index, prompt, length, runtime_root):
-    verify_runtime(runtime_root)
+    verify_runtime(runtime_root, independent_audio=bool(result.execution["runtime_contract"].get("independent_audio_contract")))
     execution = result.execution
     require(canonical(shared_registry["assets"]) == canonical(execution["assets"]), "REGISTRY_MISMATCH", "/", "Current registry differs from compiled materials")
     require(shared_registry["fingerprint"] == digest(canonical(execution["assets"])), "REGISTRY_HASH", "/", "Invalid shared registry fingerprint")

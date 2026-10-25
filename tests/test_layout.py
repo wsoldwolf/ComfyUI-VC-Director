@@ -22,7 +22,7 @@ class LayoutTests(unittest.TestCase):
         self.assertEqual(result.execution, json.loads((fixture / "execution.json").read_text(encoding="utf-8")))
 
     def test_each_node_has_an_independent_wrapper(self):
-        self.assertEqual(len(NODE_CLASS_MAPPINGS), 12)
+        self.assertEqual(len(NODE_CLASS_MAPPINGS), 13)
         modules = set()
         for name, cls in NODE_CLASS_MAPPINGS.items():
             module = importlib.import_module(cls.__module__)
@@ -33,7 +33,7 @@ class LayoutTests(unittest.TestCase):
             self.assertTrue((file.parent / "__init__.py").is_file())
             self.assertEqual(cls.__name__, name)
             modules.add(cls.__module__)
-        self.assertEqual(len(modules), 12)
+        self.assertEqual(len(modules), 13)
 
     def test_runtime_profile_preserves_distribution_defaults(self):
         self.assertEqual(runtime_config("enhancer").n_ctx, 24576)
@@ -58,7 +58,7 @@ spec = importlib.util.spec_from_file_location("_vcd_layout_probe", root / "__ini
 module = importlib.util.module_from_spec(spec)
 sys.modules[spec.name] = module
 spec.loader.exec_module(module)
-assert len(module.NODE_CLASS_MAPPINGS) == 12
+assert len(module.NODE_CLASS_MAPPINGS) == 13
 assert module.WEB_DIRECTORY == "./web"
 assert sys.modules["nodes"] is sentinel
 assert "torch" not in sys.modules
@@ -139,7 +139,15 @@ print("ComfyUI package import: OK")
         for target in ("BasicGuider", "BasicScheduler"):
             socket = next(i for i in by_type[target]["inputs"] if i["name"] == "model")
             wire = next(l for l in workflow["links"] if l[0] == socket["link"])
-            self.assertEqual(wire[1], by_type["MiniMaxH3SigmaShift"]["id"])
+            self.assertEqual(wire[1], by_type["VCDirectorAudioControl"]["id"])
+        for target, socket_name, origin, slot in (
+                ("VCDirectorAudioControl", "model", "MiniMaxH3SigmaShift", 0),
+                ("VCDirectorAudioControl", "clip", "CLIPLoader", 0),
+                ("VCDirectorRef2VA", "clip", "VCDirectorAudioControl", 1),
+                ("MiniMaxH3ChainPlanModern", "generation_fingerprint", "VCDirectorAudioControl", 2)):
+            socket = next(i for i in by_type[target]["inputs"] if i["name"] == socket_name)
+            wire = next(l for l in workflow["links"] if l[0] == socket["link"])
+            self.assertEqual(wire[1:3], [by_type[origin]["id"], slot])
 
 
 if __name__ == "__main__":

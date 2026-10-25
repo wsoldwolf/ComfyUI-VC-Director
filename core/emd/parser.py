@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from ..audio import AUDIO_KEYS, dialogue, parse_audio
 from ..errors import VCError, require
 from ..artifacts.schema import validate
+from ..artifacts.transitions import validate_beat_transitions
 from ..utilities import digest, normalize
 
 ID = r"[a-z][a-z0-9_]*"
@@ -156,11 +157,20 @@ def parse(text):
         elif (re.fullmatch("展開 " + ID, title) and not is_scene and block.level == 2) or (re.fullmatch("展開定義 " + ID, title) and is_scene and block.level == 1):
             require(project is not None, "EMD_ORDER", title, "作品 must precede beats")
             require(is_scene or scenario_count == 1, "EMD_ORDER", title, "Expected # シナリオ")
-            records, prose = block.records({"出演", "背景", "原文"} | AUDIO_KEYS, ("台詞 ", "必須出来事 ", "音声参照 "), body=not is_scene)
+            records, prose = block.records({"出演", "背景", "原文", "方針", "接続"} | AUDIO_KEYS, ("台詞 ", "必須出来事 ", "音声参照 "), body=not is_scene)
             beat_id = title.split(" ")[1]
             beats.append(dict(id=beat_id, text=_value(records, "原文", prose), actor_ids=_ids(_value(records, "出演", required=True), True),
                               background_id=_value(records, "背景", required=True), source=_span(block, kind), dialogues=_dialogues(records, kind),
                               audio=parse_audio([(k, unescape(v), n) for k, v, n in records], project["audio"])))
+            directions = [unescape(v) for k, v, _ in records if k == "方針"]
+            if directions:
+                beats[-1]["direction"] = directions
+            for key, value, line in records:
+                if key == "接続":
+                    mode = unescape(value)
+                    if mode not in {"auto", "cut", "continue"}:
+                        raise VCError("BEAT_TRANSITION", beat_id + "/接続", "接続はauto / cut / continueで指定してください。", line)
+                    beats[-1]["transition"] = mode
             for key, value, line in records:
                 if key.startswith("必須出来事 "):
                     require(is_scene, "EMD_FIELD", key, "Required events are generated in scene EMD")
@@ -191,7 +201,9 @@ def parse(text):
         return validate(result, "scene_document")
     require(scenario_count == 1, "EMD_REQUIRED", "/", "Exactly one シナリオ is required")
     result.update(schema="VCD_SCENARIO_V1", source_sha256=digest(text))
-    return validate(result, "scenario")
+    validate(result, "scenario")
+    validate_beat_transitions(beats)
+    return result
 
 
 def _parse_scene(all_blocks, index, default_audio, beat_audio=None):

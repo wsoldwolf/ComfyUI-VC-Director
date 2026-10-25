@@ -27,6 +27,8 @@ Gemma4推論には、そのモデルとGPUに対応した`llama-cpp-python`が�
 
 動画モデルはMV-Directorと同じHybrid Loaderを使います。`base_model`はFL2VA、`overlay_model`はRef2VAで、`block_range_adaln`の25〜49を重ねます。Comfy Kitchen → SLA → Spectrum → FP16 accumulation → Sigma Shiftへ接続し、Turbo LoRAはバイパス、20ステップが既定です。モデル名は実際の登録名から選び直してください。[必要ノード・設定と使い方](workflows/README.md#動画モデルと高速化)を参照してください。
 
+音声接続はEMDの`* 音声接続: auto/cut/continue`で映像のcutと独立して設定できます。`* BGM抑制: negpip`は任意の外部H3専用NegPiPを有効にし、更新WFの`VC · Audio Control`で強度を設定します。この環境では導入・短区間比較済みですが、BGM除去には至っていません。[仕様と操作例](docs/spec/audio-control.md)、[実生成の比較記録](docs/implementation/negpip-audio-validation.md)を参照してください。
+
 初期WFは`scenario`と[最小シナリオ例](assets/emd/minimal.scenario.emd)、既定のGemma4モデルです。実行前に`model_name`でインストール済みGGUFを確認してください。既存の英語Scene EMDをLLMなしでコンパイルする場合は`saved_scene`と`model_name=none`を選びます。
 
 シナリオモードへ変更した場合は、`model_name`も`none`から実モデルへ変更してください。候補は`ComfyUI/models/LLM/GGUF/`と登録済みの`LLM`・`gguf`・`llm`フォルダから検出し、`mmproj`を除外します。新規ノードでは検出できた既定Gemma4を優先します。既存WFのモデル選択は保持します。モデルを追加した場合はComfyUIのモデル一覧を更新するか、再起動してください。

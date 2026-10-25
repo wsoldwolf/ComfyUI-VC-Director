@@ -17,6 +17,8 @@
 | 環境音 | なし / 具体的内容 / シーンに合わせて補完 | なし |
 | 効果音 | なし / 具体的内容 / シーンに合わせて補完 | なし |
 | 音声参照 | 素材IDと用途music / ambience / effects | 空配列 |
+| 音声接続 | auto / cut / continue | auto（旧動作） |
+| BGM抑制 | prompt / negpip | prompt |
 
 人物の声質参照は人物定義の声質音声で指定する。声質音声を接続しても発声を許可しない。発声なしの人物の声質参照は、そのSceneで有効化しない。音楽参照もBGMなしのSceneへ条件付けしない。
 
@@ -48,15 +50,15 @@ summary・ACTIONの「言葉を口にする」「話す」「声を出す」な�
 
 | 方針 | 出力条件 |
 |---|---|
-| 全音響なし | Complete silence。発声、歌唱、鼻歌、音楽、環境音、効果音を明示禁止 |
+| 全音響なし | `overall_soundscape: Complete silence.` |
 | 発声なし・物理音あり | 許可音だけを列挙し、speech / narration / singing / humming / character vocalizationを禁止 |
 | 指定台詞のみ | 指定話者が指定語句を指定区間だけ発声。追加、言い換え、反復、説明文の読み上げを禁止 |
-| BGMなし | non_diegetic_musicへNo non-diegetic musicとBGM・伴奏・旋律・劇中音楽の明示禁止を記述 |
+| BGMなし | `non_diegetic_music: N/A`。音楽禁止語の長い列挙を付加しない |
 | BGM生成 | 指定音楽だけを生成。歌詞・歌唱が未許可なら器楽に限定 |
 
 無声区間は発声許可をScene全体へ拡張せず、発話event以外の発声を禁止する。人物の笑い声・溜め息・叫びなども初期V1では無指定で追加しない。参照音声を「そのまま読み上げる」「追加の話者」と解釈させない。
 
-音響prompt policy v2は、全無音Sceneへ全区間の無音、物理音・BGMなしの台詞Sceneへdry isolated dialogueと発話前後の無音を追記する。専用の音楽欄はN/Aで済ませない。旧policy v1は保存revisionの再現読込用に維持する。
+新規生成は音響prompt policy v3を使用する。BGMなしではcl-japanese2jsonと同じ簡潔な音響文面を用い、台詞のみならexact shot-synchronized dialogueと他の音がない旨を記す。音声参照がある場合だけ参照の用途制約を追記する。無音指定はComplete silence、音楽欄はN/Aとする。同一seed比較で、長い禁止文を出すv2よりMusic分類応答が大きく低下したためである。BGM生成時は従来の許可・器楽制約を保つ。旧policy v1／v2は保存revisionの再現読込用に維持する。
 
 発声キューの検査は日本語と英訳後に実施し、既定strictとする。warnは明示選択の診断用。構造エラー、許可不一致、話者不明をwarnで緩和しない。否定文・保護した発話・Compiler所有制約を肯定的発声要求と混同しない。
 
@@ -66,6 +68,26 @@ summary・ACTIONの「言葉を口にする」「話す」「声を出す」な�
 
 発声禁止・無音指示が主な生成制御であり、後段の音源差替えで代用しない。H3が指示に従うかは実音声で確認する。残存する発声・BGMは生成失敗として記録し、再生成対象とする。プロンプトだけによる完全無音や完全な音素同期は保証しない。
 
-## 6. 分析履歴
+## 6. 映像と独立した音声接続
 
-cl-japanese2jsonの`jsongen.py`と関連テストから、発声許可照合、未保護発声キュー検査、音響省略時の明示禁止を再利用する。MV-DirectorのCompilerから発話保護と固定音響directiveを再利用する。元音源コピーの設計は今回の参照音声主体の構成へ持ち込まない。過去の読み上げ・BGM発生はユーザーの運用報告であり、実H3の比較再生成は未実施。
+作品と展開で`* 音声接続:`を指定し、展開の値を優先する。生成Sceneは作者の指定を保持し、LLMが変更しない。Scene EMDではSceneの`overall_soundscape`に確定方針を保存する。
+
+| 値 | 動作 |
+|---|---|
+| auto又は省略 | 従来どおり、映像continue・前後とも発声なし・音響方針と有効参照が一致する場合だけ音声Guide22 |
+| cut | 映像continueでも音声Guide0 |
+| continue | 映像cutでも直前の生成音声をGuide22として使用。作品先頭だけ0 |
+
+これは生成の条件付けであり、前の波形をコピー・ループする指定ではない。映像cutで音声だけ続ける場合、音声Guideは新Scene開始より前に置き、映像context・追加trim・event時刻補正を増やさない。背景や出演者の変更も許可する。直前で許可していた音を新Sceneで禁止する境界では、持ち越しを防ぐため`AUDIO_CONTINUITY_PERMISSION`で停止し、`音声接続: cut`を案内する。音声継続は聴感上の完全な連続性やBGM抑制を保証しない。
+
+## 7. H3専用NegPiP
+
+`BGM: なし`と`BGM抑制: negpip`を併記すると、Compilerが音声だけに適用する負条件`(background music, instrumental soundtrack:-1.0@a0-)`を付加する。作者の台詞は変更しない。BGM生成とnegpipの併用は拒否する。省略時は従来の禁止promptのみ。
+
+配布WFの`VC · Audio Control`は保存Planを読み、[H3専用NegPiP](https://github.com/hako-mikan/comfyui-minimax-h3-negpip)でMODELとCLIPの両方をpatchする。強度は同ノードの`value_strength`で設定（既定1、0は比較用）。未導入・CLIP未接続を明示エラーにし、強度と依存コードhashを生成fingerprintへ含める。要求のないPlanでは元のMODEL・CLIPをそのまま返す。
+
+これは実験的な追加抑制である。[同一seed比較](../implementation/negpip-audio-validation.md)では強度1・3でもMusic判定が残り、除去成功とは扱っていない。音声の後処理による無音化・分離は実施しない。
+
+## 8. 分析履歴
+
+cl-japanese2jsonの`jsongen.py`と関連テストから、発声許可照合、未保護発声キュー検査、音響省略時の明示禁止を再利用する。MV-DirectorのCompilerから発話保護と固定音響directiveを再利用する。元音源コピーの設計は今回の参照音声主体の構成へ持ち込まない。実H3の比較結果は[検証記録](../implementation/negpip-audio-validation.md)を参照。

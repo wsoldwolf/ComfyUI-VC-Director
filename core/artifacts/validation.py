@@ -5,6 +5,7 @@ from collections import Counter
 from ..audio import dialogue, no_speech_markup, validate_audio
 from ..errors import require
 from .schema import validate
+from .transitions import validate_beat_transitions, validate_scene_transition
 
 
 def unique(items, path):
@@ -60,10 +61,13 @@ def validate_story(document):
         require(beat["background_id"] in backgrounds, "UNKNOWN_BACKGROUND", path, "Undefined background")
         require(len(beat["actor_ids"]) <= 4, "SUBJECT_LIMIT", path, "H3 supports up to four active subjects")
         _prose(beat["text"], path)
+        for value in beat.get("direction", []):
+            _prose(value, path + "/direction")
         validate_audio(beat["audio"], path)
         for d in beat["dialogues"]:
             require(d["actor_id"] in beat["actor_ids"] and beat["audio"]["vocal"] == "dialogue", "DIALOGUE_PERMISSION", d["id"], "Speaker must be active and speech permitted")
             require(dialogue(d["text"])[1] == d["language"], "DIALOGUE_LANGUAGE", d["id"], "Language does not match markup")
+    validate_beat_transitions(document["beats"])
     if not is_scene:
         return document
     unique(document["scenes"], "scenes")
@@ -82,14 +86,7 @@ def validate_story(document):
         require(0 < duration <= 15000, "SCENE_DURATION", path, "Scene must be within 15 seconds")
         require(scene["start_ms"] == (previous["end_ms"] if previous else 0), "SCENE_COVERAGE", path, "Scenes must be contiguous from zero")
         require(set(scene["depends_on"]) <= set(seen), "DEPENDENCY", path, "Only preceding Scenes can be dependencies")
-        if previous is None:
-            require(scene["transition"] == "cut", "TRANSITION", path, "First Scene must be cut")
-        elif scene["transition"] == "continue":
-            require(previous["id"] in scene["depends_on"] and set(previous["actor_ids"]) == set(scene["actor_ids"]) and previous["background_id"] == scene["background_id"], "TRANSITION", path, "Continue requires previous Scene, same cast and background")
-            terminal = {(s["owner_id"], s["key"]): s["value"] for s in previous["terminal_state"]}
-            for state in scene["initial_state"]:
-                key = state["owner_id"], state["key"]
-                require(key not in terminal or terminal[key] == state["value"], "STATE_CONTINUITY", path, "Conflicting continued state")
+        validate_scene_transition(scene, previous, beat)
         for key in ("subject_descriptions", "retention"):
             values = [s["actor_id"] for s in scene[key]]
             require(len(values) == len(set(values)) and set(values) == set(scene["actor_ids"]), "SUBJECT_COVERAGE", path, f"{key} must contain exactly active actors")

@@ -107,11 +107,12 @@ def load(project_root, asset_root=None, runtime_root=None):
             return self(source)
 
     replay = compile_scene_emd(contents["scenes.emd"], execution["assets"], ReplayTranslator(),
-                               prompt_policy=metadata.get("prompt_policy_version", LEGACY_PROMPT_POLICY))
+                               prompt_policy=metadata.get("prompt_policy_version", LEGACY_PROMPT_POLICY),
+                               replay_output_sample_rate=execution["runtime_contract"]["output_sample_rate"])
     require(replay.plan == plan and replay.execution == execution, "COMPILED_MISMATCH", "/", "Saved artifacts fail deterministic recompilation")
     if asset_root is not None:
         verify_assets(execution["assets"], asset_root)
     if runtime_root is not None:
         from ..h3_contract import verify_runtime
-        verify_runtime(runtime_root)
+        verify_runtime(runtime_root, independent_audio=bool(execution["runtime_contract"].get("independent_audio_contract")))
     return replay

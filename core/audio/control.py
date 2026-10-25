@@ -7,7 +7,7 @@ from ..errors import VCError, require
 DEFAULT_AUDIO = dict(vocal="none", bgm="none", bgm_description=None,
                      ambience="none", ambience_description=None,
                      effects="none", effects_description=None, reference_audio=[])
-AUDIO_KEYS = {"発声", "BGM", "環境音", "効果音", "音響", "音声参照"}
+AUDIO_KEYS = {"発声", "BGM", "環境音", "効果音", "音響", "音声参照", "音声接続", "BGM抑制"}
 
 
 def dialogue(text):
@@ -31,7 +31,13 @@ def parse_audio(records, parent=None):
     for key, value, line in records:
         if key == "音響":
             require(value == "無音", "AUDIO_POLICY", str(line), "音響 accepts 無音")
-            result = copy.deepcopy(DEFAULT_AUDIO)
+            controls = {k: result[k] for k in ("continuity", "bgm_suppression") if k in result}
+            result = dict(copy.deepcopy(DEFAULT_AUDIO), **controls)
+        elif key in {"音声接続", "BGM抑制"}:
+            field, allowed = (("continuity", {"auto", "cut", "continue"}) if key == "音声接続"
+                              else ("bgm_suppression", {"prompt", "negpip"}))
+            require(value in allowed, "AUDIO_POLICY", str(line), key + " accepts " + " / ".join(sorted(allowed)))
+            result[field] = value
         elif key == "発声":
             require(value in {"なし", "指定台詞のみ"}, "AUDIO_POLICY", str(line), "Unknown vocal permission")
             result["vocal"] = "none" if value == "なし" else "dialogue"
@@ -57,12 +63,14 @@ def parse_audio(records, parent=None):
             result["reference_audio"] = [r for r in result["reference_audio"] if r["purpose"] != purpose]
             result["reference_audio"].extend({"asset_id": a.strip(), "purpose": purpose} for a in value.split(","))
     if any(k == "音響" for k, _, _ in records):
-        require(result == DEFAULT_AUDIO, "AUDIO_CONFLICT", "音響", "無音 cannot coexist with enabled audio")
+        require(all(result[k] == v for k, v in DEFAULT_AUDIO.items()), "AUDIO_CONFLICT", "音響", "無音 cannot coexist with enabled audio")
     validate_audio(result, "audio")
     return result
 
 
 def validate_audio(policy, path, parent=None):
+    require(policy.get("bgm_suppression", "prompt") != "negpip" or policy["bgm"] == "none",
+            "AUDIO_SUPPRESSION", path, "BGM抑制: negpipはBGM: なしの区間で使用してください。BGMを生成する区間はBGM抑制: promptに変更してください。")
     for key in ("bgm", "ambience", "effects"):
         description = policy[key + "_description"]
         require(description is None if policy[key] in {"none", "expand"} else isinstance(description, str) and bool(description.strip()), "AUDIO_DESCRIPTION", path, f"Description does not match {key} mode")
@@ -74,6 +82,9 @@ def validate_audio(policy, path, parent=None):
         field = "bgm" if ref["purpose"] == "music" else ref["purpose"]
         require(policy[field] != "none", "AUDIO_REFERENCE", path, f"Reference for disabled {field}")
     if parent:
+        for key, default in (("continuity", "auto"), ("bgm_suppression", "prompt")):
+            require(policy.get(key, default) == parent.get(key, default), "AUDIO_CONTROL", f"{path}/audio/{key}",
+                    f"Keep the authored {key}={parent.get(key, default)!r}; do not change audio control policy.")
         for key in ("vocal", "bgm", "ambience", "effects"):
             require(parent[key] != "none" or policy[key] == "none", "AUDIO_PERMISSION", f"{path}/audio/{key}",
                     f"Parent forbids {key}. Set audio.{key}='none'"
@@ -81,7 +92,14 @@ def validate_audio(policy, path, parent=None):
         require(all(r in parent["reference_audio"] for r in policy["reference_audio"]), "AUDIO_PERMISSION", path, "Scene adds an unauthorized reference")
 
 
-def directives(policy, *, explicit=False):
+def directives(policy, *, explicit=False, compact=False):
+    if compact:
+        physical = any(policy[k] != "none" for k in ("ambience", "effects"))
+        if policy["vocal"] == "none":
+            return ("No character vocalization is present. No other ambience or physical sound is present." if physical
+                    else "Complete silence.")
+        return ("The only character vocalization is the exact shot-synchronized dialogue explicitly specified in this scene. "
+                "No other ambience, physical sound, or character vocalization is present.")
     lines = []
     if all(policy[k] == "none" for k in ("vocal", "bgm", "ambience", "effects")):
         lines.append("Complete silence. No speech, narration, singing, humming, character vocalization, music, ambience or sound effects.")
@@ -106,6 +124,9 @@ def directives(policy, *, explicit=False):
 
 def audio_records(policy):
     records = [("発声", "なし" if policy["vocal"] == "none" else "指定台詞のみ")]
+    for label, field in (("音声接続", "continuity"), ("BGM抑制", "bgm_suppression")):
+        if field in policy:
+            records.append((label, policy[field]))
     for key, label in (("bgm", "BGM"), ("ambience", "環境音"), ("effects", "効果音")):
         mode = policy[key]
         value = "なし" if mode == "none" else "シーンに合わせて補完" if mode == "expand" else ("生成:" if key == "bgm" else "") + policy[key + "_description"]

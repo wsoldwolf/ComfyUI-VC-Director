@@ -38,6 +38,12 @@ python tools/verify_context_loop.py --context-loop-root PATH/TO/ComfyUI-MiniMaxH
 
 ## 動画モデルと高速化
 
+音声は作品又は展開の`* 音声接続: continue`で、映像の`* 接続: cut`と独立して直前の生成音声をGuide22として引き継げます。`音声接続: cut`は映像がcontinueでも音声を引き継ぎません。省略／autoは従来動作です。これは波形コピーではなく条件付けであり、音楽・声質の完全一致は保証しません。[入力例](../assets/emd/audio-control.scenario.emd)を参照してください。
+
+H3専用NegPiPを試す場合は、EMDへ`* BGM: なし`と`* BGM抑制: negpip`を指定し、言語生成から新revisionを保存してください。更新WFの`VC · Audio Control`の`value_strength`で強度を変更します。既定は1で、BGM抑制を省略したPlanには適用しません。[外部ノード](https://github.com/hako-mikan/comfyui-minimax-h3-negpip)の導入とComfyUI再起動が必要です。この環境には固定版を導入済みです。新しい[VC Director.json](VC%20Director.json)を読み込んでください。開いている旧WFへノードは自動追加されません。配布WFは37ノード・68リンクです。[比較結果](../docs/implementation/negpip-audio-validation.md)では強度3でもBGM判定が残っています。
+
+展開ごとの接続は、シナリオの`## 展開 ID`に`* 接続: continue`を記述します。同じ背景ID・出演者集合の直前Sceneから引き継ぎます。作品先頭だけはcutです。`cut`は当該展開の全Sceneをcut、`auto`又は省略はGemma4が判断します。`* 方針:`も展開内で指定でき、その展開の演出だけに適用します。[入力例](../assets/emd/continued.scenario.emd)と[仕様](../docs/spec/simple-emd.md)を参照してください。変更後は言語生成から新revisionを作成します。
+
 新しいカメラ計画を使う場合は、ComfyUIを再起動してから「言語生成へ切替」で新revisionを作成し、その後「動画生成へ切替」で生成します。既存Planの動画生成だけではCAMERAは追加されません。出力先の`scenes.emd`のCAMERA行と`plan.json`の`detailed_description`で、対象・方向・時刻を確認できます。固定カメラも明記されます。作者が固定・追従等を指定するときは、シナリオの`* 方針:`や展開本文へ記述してください。
 
 MV-Directorの`02_video_generator.json`から、モデル読み込みと高速化の設定・接続を移植しています。更新した[VC Director.json](VC%20Director.json)を読み込み、ブラウザを再読み込みしてから切り替えます。既存の開いたWFへ新しいノードは自動追加されません。既存の素材登録やEMDを残す場合は、先にそのWFを保存してから移してください。
@@ -47,7 +53,7 @@ Hybrid Loader (FL2VA + Ref2VA AdaLN 25..49)
   → Turbo LoRA (Bypass)
   → Comfy Kitchen Attention → Block Sparse Attention (SLA)
   → Spectrum → FP16 accumulation → Sigma Shift
-  → BasicGuider / BasicScheduler → Sampler
+  → VC Audio Control → BasicGuider / BasicScheduler → Sampler
 ```
 
 | 設定 | 配布値 |

@@ -1,6 +1,8 @@
 """ComfyUI adapter; public node surface is preserved."""
 from ...core.artifacts.assets import registry, path_for
 from ...core.h3_contract.runtime import conditioning_inputs
+from ...core.audio.continuity import negpip_requested
+from ...core.errors import require
 from ..common import CATEGORY
 
 
@@ -16,6 +18,8 @@ class VCDirectorRef2VA:
 
     def condition(self, clip, vae, audio_vae, prompt, width, height, length, compiled, registry, clip_index, runtime_root):
         active = conditioning_inputs(compiled, registry, clip_index, prompt, length, runtime_root)
+        require(not negpip_requested(compiled.document) or getattr(clip, "vcd_negpip_active", False),
+                "NEGPIP_REQUIRED", "/", "BGM抑制: negpipにはVC · Audio ControlのMODEL/CLIP出力を接続してください。")
         from comfy_execution.graph_utils import GraphBuilder
         graph = GraphBuilder()
         node = graph.node("MiniMaxH3ReferenceToVideo", clip=clip, vae=vae, audio_vae=audio_vae, prompt=prompt, width=width, height=height, length=length, ref_image_size="match")

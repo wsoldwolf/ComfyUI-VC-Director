@@ -23,6 +23,10 @@ def render_scene(document):
     for beat in document["beats"]:
         lines.extend(["", "# 展開定義 " + beat["id"]])
         fields([("出演", ", ".join("@" + a for a in beat["actor_ids"]) or "なし"), ("背景", beat["background_id"]), ("原文", beat["text"])])
+        if "transition" in beat:
+            fields([("接続", beat["transition"])])
+        if "direction" in beat:
+            fields([("方針", value) for value in beat["direction"]])
         # Delimiters are syntax, not part of the escaped authored speech.
         for d in beat["dialogues"]:
             lines.append(f"* 台詞 {d['id']}: @{d['actor_id']} | {escape(d['text'])}")

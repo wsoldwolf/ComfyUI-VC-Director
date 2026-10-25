@@ -2,6 +2,13 @@
 
 ## 0.1.0（開発中）
 
+- cl-japanese2jsonの短い音響文面を同一seedで比較し、Music分類応答の大幅低下を確認。新規の音響prompt policyをv3へ変更し、BGMなしではComplete silence／指定台詞の簡潔な制約と音楽欄N/Aを出力。v1／v2保存revisionの再現読込を維持。
+
+- H3専用NegPiPを選択式で追加。`BGM抑制: negpip`と`VC · Audio Control`で音声限定の負条件を適用し、MODEL／CLIPと生成fingerprintを接続。同一seedの強度1／3比較ではBGM除去に至らず、実験結果を記録。
+- `音声接続: auto/cut/continue`を作品・展開へ追加。映像cut＋音声Guide22、映像continue＋音声cutを独立制御し、保存EMD・追加runtime契約・生成制約へ反映。実H3の2区間で映像追加trimなしの音声継続を検証。
+
+- 展開内の`方針`に対応し、UNKNOWN_FIELDを解消。展開ごとの`接続: auto/cut/continue`を追加し、生成文法・状態継承・有限回復・Scene EMD保存・Guide22へ反映。作品先頭はcutを保ち、異なる背景・出演者への強制継続は設定方法付きで拒否。
+
 - 新規TimelinePlannerの各Shotに明示的なCAMERA計画を追加。固定・追従・パン等を作者の指定と動作から選択し、文法制約・時間被覆・重複・有限回復で検証。旧EMDのコンパイル互換を維持し、完全なカメラ計画はretime後も被覆を保つ。
 
 - 配布WFのレビューゲートを既定で無効化し、生成後の承認待ちを省略。

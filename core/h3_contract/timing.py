@@ -28,7 +28,7 @@ def event_timing(event, context, output_start):
                 output_start_frame=output_start + start, output_end_frame=output_start + end)
 
 
-def verify_runtime(root):
+def verify_runtime(root, *, independent_audio=False):
     root = Path(root)
     require(digest(canonical(CONTRACT["source_files"])) == CONTRACT["source_fingerprint"], "RUNTIME_CONTRACT", "/", "Bundled source fingerprint is inconsistent")
     for name, expected in CONTRACT["source_files"].items():
@@ -36,4 +36,12 @@ def verify_runtime(root):
         require(path.is_file(), "RUNTIME_CONTRACT", name, "Missing runtime source")
         actual = hashlib.sha256(path.read_bytes()).hexdigest()
         require(actual == expected, "RUNTIME_CONTRACT", name, "Runtime changed; compatibility verification is required")
+    if independent_audio:
+        extension = CONTRACT["independent_audio"]
+        require(digest(canonical(extension["source_files"])) == extension["source_fingerprint"],
+                "RUNTIME_CONTRACT", "/", "Independent audio contract fingerprint is inconsistent")
+        for name, expected in extension["source_files"].items():
+            path = root / name
+            require(path.is_file() and hashlib.sha256(path.read_bytes()).hexdigest() == expected,
+                    "RUNTIME_CONTRACT", name, "Independent audio Guide runtime changed; verify timing and trim before use")
     return CONTRACT

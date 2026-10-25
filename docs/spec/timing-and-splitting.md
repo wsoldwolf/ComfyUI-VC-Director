@@ -16,10 +16,12 @@ H3 / Context Loopの実処理長を正本とする。Gemma4は15秒以内を目�
 | 継続方式 / anchor | guide / head |
 | 映像context | cut=0、continue=22frame |
 | 音声経路 | generated_audio、最終採用はgenerated |
-| 音声context | cut=0。continueでも前後どちらかに発話eventがある、または音響方針・有効参照が変わる境界は0。非発声かつ方針・参照が一致する継続だけ22 |
+| 音声context | autoは従来の非発声・同方針・同参照の映像継続だけ22。明示cutは0、明示continueは映像と独立して22。作品先頭は0 |
 | trim | raw先頭の映像context区間を除去し、標準Trimのmatch_tailを有効にする |
 
 音声context値は各Plan shots要素へ必ず明記する。省略時のPlan既定値0は「映像contextに追従」し得るため、省略と明示0を混同しない。音声参照自体はcontextや最終音声のコピーではない。
+
+明示的な音声cut／continueには追加契約`VCD_CL_AUDIO_GUIDE_V1`を用いる。映像cut・音声continueでは、直前22frame相当の音声Guideを新Sceneの開始時刻までに配置する。映像prefix・追加trim・event offsetは0。映像continue・音声cutでは従来の映像prefix22だけを除去する。追加のruntime source hashを[Contract JSON](contracts/context-loop-timing.json)の`independent_audio`へ分離し、旧revisionのsource fingerprintを維持する。音響許可を狭める境界の扱いは[音声接続](audio-control.md)を参照。
 
 ## 2. rawと実現尺
 
@@ -55,6 +57,8 @@ rawに含まれるcontext後から新規演技・発話を始める。同じ時�
 素材音声は参照conditioningとしてロードする。最終PCMはH3 audio VAEと標準decode / Trim / Segment Saveが生成する。再生用元素材のsource範囲、copy、mixの操作は設けない。
 
 出力sample境界は累積frame位置から`floor(frame * output_sample_rate / 24 + 0.5)`で算出する。output_sample_rateは実audio VAE / decodeから取得し、contractへ記録する。LLMがsample数を生成しない。生成音声と映像の最終sample数はmatch_tailと累積境界で整合させる。
+
+追加契約で確認したH3 audio VAEのnative rateは32000Hz。新しく明示音声接続を使うrevisionはこの値を記録する。従来revisionの48000Hzという宣言値は再現読込時に保持し、既存hashを変更しない。実生成のsample数・rateはSegmentの出力を正本として検証する。
 
 ## 5. 超過・分割
 

@@ -16,8 +16,11 @@
 | `VCDirectorSeed32` | `node_seed32` | 1〜2147483647のseed、fixed／random・randomize once |
 | `VCDirectorLoadTextFile` | `node_load_text_file` | UTF-8 .txtをブラウザで選択・D&DしSTRING出力 |
 | `VCDirectorInferenceSettings` | `node_inference_settings` | 計画・翻訳・Visionのcontext／出力上限、GPU・sampling設定 |
+| `VCDirectorAudioControl` | `node_audio_control` | Planに応じたH3専用NegPiPのMODEL／CLIP patch |
 
 配布WFの操作は[workflows](../../workflows/README.md)、文法・音響・時間は[仕様](../spec/README.md)を参照してください。
+
+`VC · Audio Control`はSigma ShiftのMODEL、Text EncoderのCLIP、Loadのcompiledを受け取り、MODELをGuiderとScheduler、CLIPをRef2VA、generation_fingerprintをProduction Planへ渡します。EMDに`BGM抑制: negpip`がある場合だけ外部NegPiPを有効化します。`value_strength`は既定1、`measure_attention_mass`は診断用で既定falseです。音声接続はEMDの`音声接続: auto/cut/continue`からCompilerが決定し、この強度widgetとは独立します。
 
 `VC · 32-bit Seed`と`VC · Load Text File`はMV-Directorから移植した独立ノードです。seedの`-1`は初回の乱数生成、`random`は実行ごとの乱数生成、`randomize once`はブラウザで乱数を設定してfixedへ切り替えます。テキストはUTF-8（BOM可）の`.txt`、最大16 MiBです。内容はWFへ埋め込まれるため、保存後の実行には元ファイルのパスは不要です。追加ノードを使う前にComfyUIを再起動し、ブラウザを再読み込みしてください。
 

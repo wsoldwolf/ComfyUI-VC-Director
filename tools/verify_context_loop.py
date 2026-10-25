@@ -113,6 +113,17 @@ def verify(runtime_root, object_info=None):
         assert shot["delivered_frames"] == segment["end_frame"] - segment["start_frame"]
         assert shot["generation_start_frame"] == segment["start_frame"] - segment["context_frames"]
         assert shot["audio_context_length"] == segment["audio_context_frames"]
+    # A picture cut may carry generated audio without a video prefix or trim.
+    doc["scenes"][1]["transition"] = "cut"
+    for audio in (doc["audio"], doc["beats"][0]["audio"], *[s["audio"] for s in doc["scenes"]]):
+        audio["continuity"] = "continue"
+    audio_only = compile_document(doc, render_scene(doc))
+    verify_runtime(runtime_root, independent_audio=True)
+    normalized = invoke(nodes[24], plan_json_input=json.dumps(audio_only.plan), chain_policy=policy)[0]
+    assert normalized["shots"][1]["context_length"] == 0
+    assert normalized["shots"][1]["audio_context_length"] == 22
+    assert normalized["shots"][1]["delivered_frames"] == audio_only.plan["shots"][1]["length"]
+    assert normalized["shots"][1]["generation_start_frame"] == audio_only.execution["segments"][1]["start_frame"]
     print(f"Context Loop contract + {len(nodes)} nodes / {len(ids)} links + cut/continue Plan normalization: OK")
 
 

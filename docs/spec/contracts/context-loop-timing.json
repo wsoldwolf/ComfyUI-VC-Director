@@ -28,7 +28,11 @@
     "cut": 0,
     "adjacent_dialogue_scene": 0,
     "changed_policy_or_references": 0,
-    "unchanged_nonvocal_continue": 22
+    "unchanged_nonvocal_continue": 22,
+    "explicit_continue": 22,
+    "explicit_cut": 0,
+    "audio_only_anchor": "end_at_scene_start",
+    "audio_context_costs_delivered_frames": false
   },
   "output_audio": "generated",
   "reference_prompt_policy": "native_prevalidated_direct_ref2va",
@@ -36,5 +40,16 @@
     "basis": "ceil_planned_frames",
     "min": 0,
     "max": 16
+  },
+  "independent_audio": {
+    "contract_id": "VCD_CL_AUDIO_GUIDE_V1",
+    "source_files": {
+      "nodes.py": "6c9bbca3508ad27c333d218f5dbedb4d9892f5e6377c2f976997a0f381e6dc09",
+      "motion_context_upstream.py": "e5ab582f203894e7001733902645fda67adf0698ab64c193e4cc70ff12542ace",
+      "checkpoint_manager.py": "d61d72b83f72a2de56c0d11757a78d311c363acc8d053ac3200be959344af832",
+      "h3_audio_grid.py": "90a9e2344213a559b6a00e49c7f29b9bd892d8543ada814a973db386b1a93800"
+    },
+    "source_fingerprint": "c3976f45367f8af39b33922ae4cef118fefad7cdb4764d30b25027d1804ffc5c",
+    "native_sample_rate": 32000
   }
 }

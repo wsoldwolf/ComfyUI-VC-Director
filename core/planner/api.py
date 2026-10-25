@@ -4,6 +4,7 @@ import copy
 from ..errors import VCError, require
 from ..artifacts.schema import validate
 from ..artifacts.validation import unique, validate_story
+from ..artifacts.transitions import validate_scene_transition
 from ..vision.image_facts import apply_image_facts, apply_scene_image_facts
 from .camera import validate_camera_plan
 
@@ -30,11 +31,7 @@ class StoryTimelinePlanner:
                     start = accepted[-1]["end_ms"] if accepted else 0
                     require(outline["start_ms"] == start and 0 < outline["end_ms"] - start <= 15000, "OUTLINE_TIMING", outline["id"], "Scenes must be contiguous and <=15 seconds")
                     require(outline["id"] not in {s["id"] for s in accepted} and set(outline["depends_on"]) <= {s["id"] for s in accepted}, "OUTLINE_DEPENDENCY", outline["id"], "Duplicate or forward dependency")
-                    if not accepted:
-                        require(outline["transition"] == "cut", "OUTLINE_TRANSITION", outline["id"],
-                                "First Scene must use transition='cut' and depends_on=[]; no prior Scene exists")
-                    elif outline["transition"] == "continue":
-                        require(bool(accepted) and accepted[-1]["id"] in outline["depends_on"] and set(accepted[-1]["actor_ids"]) == set(outline["actor_ids"]) and accepted[-1]["background_id"] == outline["background_id"], "OUTLINE_TRANSITION", outline["id"], "Invalid continuation")
+                    validate_scene_transition(outline, accepted[-1] if accepted else None, beat, code="OUTLINE_TRANSITION")
                     local_required.extend(outline["required_event_ids"])
                     accepted.append(outline)
                 expected = [e["id"] for e in required if e["beat_id"] == beat["id"]]

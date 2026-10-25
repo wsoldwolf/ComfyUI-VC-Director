@@ -1,5 +1,7 @@
 # 再利用コード
 
+任意のBGM抑制機能は外部カスタムノード[comfyui-minimax-h3-negpip](https://github.com/hako-mikan/comfyui-minimax-h3-negpip)へ接続します。検証版はcommit `f725718b4c597fab92cdb1fe981dfe3544a75665`、ライセンスはAGPL-3.0です。本体コードは同梱せず、`nodes/node_audio_control/`をadapterとします。[依存のhash記録](docs/implementation/negpip-source.json)と[実生成検証](docs/implementation/negpip-audio-validation.md)を参照してください。
+
 動画WFのHybrid Loader・高速化・Text Encoder設定はMV-Directorの`workflows/02_video_generator.json`から抽出しています。GPL-3.0-only、Copyright © 2026 wsoldwolf。元HEAD・元WFと抽出snapshotのhashは[移植記録](docs/implementation/mv-video-workflow-sources.json)に保持し、`tools/workflow_templates/mv_video_model_stack.json`から再生成します。Hybrid Loader・Spectrum・KJNodes本体は同梱せず、既存の登録ノードへ接続します。
 
 32-bit Seed・Load Text Fileと対応するブラウザUI／テキストdecode処理もMV-Directorから移植しています。VCのノードID・カテゴリへ変更し、UIから未使用のCombo処理を除外しています。移植元HEAD・ファイルhash・統合先hashは[追加移植記録](docs/implementation/mv-utilities-sources.json)へ保存しています（GPL-3.0-only、Copyright © 2026 wsoldwolf）。

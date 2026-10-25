@@ -5,6 +5,7 @@ from dataclasses import dataclass
 
 from .. import __version__
 from ..audio import dialogue, directives
+from ..audio.continuity import context_frames as audio_context_frames, NEGPIP_MUSIC
 from ..emd import parse
 from ..errors import require
 from ..artifacts.schema import validate
@@ -16,7 +17,8 @@ NATIVE = re.compile(r"<(?:Subject [1-4]|Picture [1-9]|Video [1-3]|Audio [1-6])>"
 SYMBOL = re.compile(r"(?<![A-Za-z0-9_])@([A-Za-z][A-Za-z0-9_-]*)")
 JAPANESE = re.compile(r"[\u3040-\u30ff\u3400-\u9fff]")
 LEGACY_PROMPT_POLICY = "vcd-audio-v1"
-PROMPT_POLICY = "vcd-audio-v2"
+EXPLICIT_PROMPT_POLICY = "vcd-audio-v2"
+PROMPT_POLICY = "vcd-audio-v3"
 NO_MUSIC = "No non-diegetic music. No background music, soundtrack, score, melody or instrumental accompaniment. No diegetic music."
 
 
@@ -77,15 +79,15 @@ def bind_references(document, scene, registry):
     return bindings + paired
 
 
-def compile_scene_emd(text, assets=(), translator=None, *, prompt_policy=PROMPT_POLICY):
+def compile_scene_emd(text, assets=(), translator=None, *, prompt_policy=PROMPT_POLICY, replay_output_sample_rate=None):
     text = normalize(text)
     document = parse(text)
     require(document["schema"] == "VCD_SCENE_DOCUMENT_V1", "INPUT_KIND", "/", "Compiler requires scene EMD")
-    return compile_document(document, text, assets, translator, prompt_policy=prompt_policy)
+    return compile_document(document, text, assets, translator, prompt_policy=prompt_policy, replay_output_sample_rate=replay_output_sample_rate)
 
 
-def compile_document(document, scene_emd, assets=(), translator=None, *, prompt_policy=PROMPT_POLICY):
-    require(prompt_policy in {LEGACY_PROMPT_POLICY, PROMPT_POLICY}, "PROMPT_POLICY", "/", "Unknown audio prompt policy")
+def compile_document(document, scene_emd, assets=(), translator=None, *, prompt_policy=PROMPT_POLICY, replay_output_sample_rate=None):
+    require(prompt_policy in {LEGACY_PROMPT_POLICY, EXPLICIT_PROMPT_POLICY, PROMPT_POLICY}, "PROMPT_POLICY", "/", "Unknown audio prompt policy")
     document = copy.deepcopy(validate_story(document))
     require(document["schema"] == "VCD_SCENE_DOCUMENT_V1", "INPUT_KIND", "/", "Scene document required")
     scene_emd = normalize(scene_emd)
@@ -98,6 +100,7 @@ def compile_document(document, scene_emd, assets=(), translator=None, *, prompt_
     output_start, previous = 0, None
     background_map = {b["id"]: b for b in document["backgrounds"]}
     actor_map = {a["id"]: a for a in document["actors"]}
+    beat_map = {b["id"]: b for b in document["beats"]}
 
     for index, scene in enumerate(document["scenes"], 1):
         scene = copy.deepcopy(scene)
@@ -131,8 +134,7 @@ def compile_document(document, scene_emd, assets=(), translator=None, *, prompt_
             return translation_cache[resolved]
 
         raw, context = lengths(scene["end_ms"] - scene["start_ms"], scene["transition"] == "continue")
-        same_audio = previous is not None and scene["audio"] == previous["audio"] and bindings == previous["bindings"]
-        audio_context = 22 if context and same_audio and scene["audio"]["vocal"] == previous["audio"]["vocal"] == "none" else 0
+        audio_context = audio_context_frames(scene["audio"], previous, context, bindings)
         all_events = [e for shot in scene["shots"] for e in shot["events"]] + scene["sound_events"]
         timings = [event_timing(e, context, output_start) for e in all_events]
         timing_map = {e["event_id"]: e for e in timings}
@@ -161,20 +163,29 @@ def compile_document(document, scene_emd, assets=(), translator=None, *, prompt_
                     speech.append(protected)
                 else:
                     details.append(f"{interval(e)} {e['kind'].upper()} {owner}: {translate(e['text'])}")
-        sounds = [directives(scene["audio"], explicit=prompt_policy == PROMPT_POLICY)]
+        compact = prompt_policy == PROMPT_POLICY and scene["audio"]["bgm"] == "none"
+        sounds = [directives(scene["audio"], explicit=prompt_policy in {EXPLICIT_PROMPT_POLICY, PROMPT_POLICY}, compact=compact)]
+        if compact and any(b["role"] in {"voice", "music", "ambience", "effects", "video_audio"} for b in bindings):
+            sounds.append("Audio references condition timbre and sound character only; do not copy or recite their content.")
         for key in ("ambience", "effects"):
             if scene["audio"][key + "_description"]:
                 sounds.append(key.capitalize() + ": " + translate(scene["audio"][key + "_description"]))
         sounds.extend(f"{interval(e)} {e['kind'].upper()}: {translate(e['text'])}" for e in scene["sound_events"])
         sounds.extend(f"{b['role']} reference: {b['token']}" for b in bindings if b["role"] in {"music", "ambience", "effects", "video_audio"})
-        music = (NO_MUSIC if prompt_policy == PROMPT_POLICY else "N/A") if scene["audio"]["bgm"] == "none" else translate(scene["audio"]["bgm_description"]) + ". Instrumental only."
-        sections = [("subject_definitions", definitions), ("summary", ["[reference generation] " + translate(scene["summary"])]),
+        music = (NO_MUSIC if prompt_policy == EXPLICIT_PROMPT_POLICY else "N/A") if scene["audio"]["bgm"] == "none" else translate(scene["audio"]["bgm_description"]) + ". Instrumental only."
+        summary = translate(scene["summary"])
+        directions = [translate(d) for d in document["direction"]]
+        directions.extend("Scene-specific direction (takes precedence): " + translate(d)
+                          for d in beat_map[scene["beat_id"]].get("direction", []))
+        sections = [("subject_definitions", definitions), ("summary", ["[reference generation] " + summary]),
                     ("retention_analysis", [f"{subject_map[r['actor_id']]}: {r['mode']}" for r in scene["retention"]] or ["N/A"]),
-                    ("detailed_description", [translate(d) for d in document["direction"]] + details), ("overall_soundscape", sounds), ("non_diegetic_music", [music])]
+                    ("detailed_description", directions + details), ("overall_soundscape", sounds), ("non_diegetic_music", [music])]
         prompt = "\n\n".join(title + ":\n" + "\n".join(values) for title, values in sections)
+        if scene["audio"].get("bgm_suppression", "prompt") == "negpip":
+            prompt += "\n\n" + NEGPIP_MUSIC
         require(re.findall(r"<d>.*?</d>", prompt, re.S) == speech, "DIALOGUE_INTEGRITY", scene["id"], "Compiled speech differs from authored speech")
         plan_shot = dict(id=scene["id"], length=raw, prompt=prompt, context_length=context, audio_context_length=audio_context)
-        if context:
+        if context or audio_context:
             plan_shot["continuation_mode"] = "guide"
         shots.append(plan_shot)
         segments.append(dict(id=scene["id"], scene_id=scene["id"], index=index, planned_start_ms=scene["start_ms"], planned_end_ms=scene["end_ms"],
@@ -194,6 +205,15 @@ def compile_document(document, scene_emd, assets=(), translator=None, *, prompt_
             item["segment_ids"].append(segment["id"])
     runtime = {key: CONTRACT[key] for key in ("contract_id", "context_loop_version", "context_loop_commit", "source_fingerprint", "fps")}
     runtime.update(output_sample_rate=48000, compiler_version=__version__)
+    if any(s["audio"].get("continuity", "auto") != "auto" for s in document["scenes"]):
+        runtime.update(independent_audio_contract=CONTRACT["independent_audio"]["contract_id"],
+                       independent_audio_fingerprint=CONTRACT["independent_audio"]["source_fingerprint"],
+                       output_sample_rate=CONTRACT["independent_audio"]["native_sample_rate"])
+    if replay_output_sample_rate is not None:
+        # Older saved revisions declared 48kHz; retain their metadata on replay.
+        require(type(replay_output_sample_rate) is int and replay_output_sample_rate > 0,
+                "SAMPLE_RATE", "/", "Saved output sample rate must be a positive integer")
+        runtime["output_sample_rate"] = replay_output_sample_rate
     execution = dict(schema="VCD_EXECUTION_V1", project_id=document["project_id"], scene_emd_sha256=digest(scene_emd), plan_sha256=digest(canonical(plan)),
                      runtime_contract=runtime, assets=list(assets), segments=segments, reference_schedule=schedule, output_audio="generated")
     validate(execution, "execution")

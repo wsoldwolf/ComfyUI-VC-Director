@@ -135,12 +135,19 @@ class EMDTests(unittest.TestCase):
 
 
 class CompilerTests(unittest.TestCase):
-    def test_music_none_is_explicit_in_the_dedicated_section(self):
+    def test_music_none_uses_compact_policy_and_retains_v2_replay(self):
+        from vc_director.core.compiler.api import EXPLICIT_PROMPT_POLICY
         result = compile_fixture()
         prompt = result.plan["shots"][0]["prompt"]
-        self.assertIn("non_diegetic_music:\nNo non-diegetic music.", prompt)
-        self.assertIn("Dry, isolated spoken dialogue only.", prompt)
-        self.assertNotIn("non_diegetic_music:\nN/A", prompt)
+        self.assertIn("non_diegetic_music:\nN/A", prompt)
+        self.assertIn("The only character vocalization is the exact shot-synchronized dialogue", prompt)
+        self.assertNotIn("No background music", prompt)
+        explicit = compile_document(result.document, result.scene_emd, prompt_policy=EXPLICIT_PROMPT_POLICY)
+        self.assertIn("non_diegetic_music:\nNo non-diegetic music.", explicit.plan["shots"][0]["prompt"])
+        self.assertIn("Dry, isolated spoken dialogue only.", explicit.plan["shots"][0]["prompt"])
+        with temporary_directory() as directory:
+            revision = save(explicit, directory)
+            self.assertEqual(load(revision.parents[1]).plan, explicit.plan)
         doc = english_document()
         for audio in (doc["audio"], doc["beats"][0]["audio"], doc["scenes"][0]["audio"]):
             audio.update(bgm="generate", bgm_description="Soft instrumental piano.")
@@ -161,8 +168,8 @@ class CompilerTests(unittest.TestCase):
         result = compile_fixture(translator=translator)
         prompt = result.plan["shots"][0]["prompt"]
         self.assertEqual(prompt.count("<d>[Japanese]ただいま。 @hero @recipient</d>"), 1)
-        self.assertIn("Only the assigned speaker", prompt)
-        self.assertIn("No background music", prompt)
+        self.assertIn("The only character vocalization is the exact shot-synchronized dialogue", prompt)
+        self.assertIn("non_diegetic_music:\nN/A", prompt)
         self.assertEqual(result.execution["segments"][0]["raw_length"], 243)
         self.assertEqual(result.execution["segments"][0]["event_timing"][1]["raw_start_frame"], 120)
 

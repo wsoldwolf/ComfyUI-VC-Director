@@ -11,10 +11,13 @@ from .node_image_to_subject_emd import VCDirectorImageToSubjectEMD
 from .node_seed32 import VCDirectorSeed32
 from .node_load_text_file import VCDirectorLoadTextFile
 from .node_inference_settings import VCDirectorInferenceSettings
+from .node_audio_control import VCDirectorAudioControl
 
 NODE_CLASS_MAPPINGS = {cls.__name__: cls for cls in (VCDirectorAssetRegistry, VCDirectorEnhancer, VCDirectorTimelinePlanner, VCDirectorCompileSave, VCDirectorBuild, VCDirectorLoad, VCDirectorRef2VA, VCDirectorReferenceVideo, VCDirectorImageToSubjectEMD, VCDirectorSeed32, VCDirectorLoadTextFile, VCDirectorInferenceSettings)}
 NODE_DISPLAY_NAME_MAPPINGS = {key: "VC · " + key.removeprefix("VCDirector") for key in NODE_CLASS_MAPPINGS}
 NODE_DISPLAY_NAME_MAPPINGS.update(VCDirectorSeed32="VC · 32-bit Seed", VCDirectorLoadTextFile="VC · Load Text File")
 NODE_DISPLAY_NAME_MAPPINGS["VCDirectorInferenceSettings"] = "VC · Gemma Settings"
+NODE_CLASS_MAPPINGS["VCDirectorAudioControl"] = VCDirectorAudioControl
+NODE_DISPLAY_NAME_MAPPINGS["VCDirectorAudioControl"] = "VC · Audio Control"
 
 __all__ = ["NODE_CLASS_MAPPINGS", "NODE_DISPLAY_NAME_MAPPINGS"]

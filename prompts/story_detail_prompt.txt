@@ -22,3 +22,4 @@ CAMERAのtextには対象・初期構図・移動方向又は固定・速度・�
 CAMERAのactor_idは出演者ID又はenvironmentです。人物なしのSceneはenvironmentを使います。IDはScene・Shotが分かる一意なものにし、台詞のIDを使い回しません。
 transition="continue"ならprevious_scenesの構図と方向を参考にして接続します。作者が指定しないハードカットや急な切り返しを追加しません。
 カメラを直すために作者の台詞・人物動作・音響許可・承認済みoutlineを変更しません。CAMERAへ発声・歌唱・BGM・効果音の指示を混ぜません。
+対象beatのdirectionは今回の展開だけの演出方針です。作品全体のdirectionを既定とし、演出が競合する場合は今回の展開のdirectionを優先して動作とカメラを具体化します。他の展開のdirectionを流用しません。outlineが指定した接続・状態・時刻を変更しません。

@@ -39,6 +39,8 @@ DETAILの生成用Schemaは対象展開の音響許可を上限とする。禁�
 
 SceneOutlineは具体的な開始・終了時刻、出演者、背景、接続、依存、状態、必須出来事を持つ。DETAILは構成のID・境界・固定情報を保持し、演技・撮影・発話・音響を追加する。時刻変更が必要ならRETIMEへ回す。
 
+展開には任意のdirection配列とtransition（auto／cut／continue）を持てる。outline生成Schemaは対象展開の出演・背景・接続を制約し、作品先頭のcutをprefixとして固定する。continueの直前Scene依存と共通state値も、outlineの意味検証内で確認する。展開方針をoutline／detailへ提示し、他展開の方針を適用しない。outlineのprompt versionはvcd-story-v5-beat-transition。指定のない入力と既存Scene EMDの読込を維持する。
+
 DETAILは各Shotのevents先頭をCAMERAへ制約する。生成SchemaのprefixItemsに先頭camera、itemsに残りのeventを指定し、導入済みllama.cppがprefixを無視する問題をローカルの変換アダプターで補う。実応答・成功cacheのどちらもPlannerの意味検証を通し、CAMERA_MISSING／CAMERA_COVERAGE／CAMERA_OVERLAP／CAMERA_TIMEを既存の最大3試行で回復する。必要な区間を診断へ数値で示し、Pythonでカメラ本文を補わない。DETAILのprompt versionはvcd-story-v7-explicit-camera。Enhancer／outlineのversionは維持する。
 
 TimingPatchはscene_id、start_ms、end_ms、shots、sound_events。shotsは{id,start_ms,end_ms,events:[{id,start_ms,end_ms}]}[]、sound_eventsは{id,start_ms,end_ms}[]。既存IDの集合を保持し、台詞や演出本文を再生成するfieldを持たない。

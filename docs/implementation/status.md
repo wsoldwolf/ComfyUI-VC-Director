@@ -20,6 +20,13 @@
 
 ## 検証したこと
 
+- 独立音声接続・H3専用NegPiP・簡潔な音響policy v3追加後はPython120件、ブラウザ側11件、Context Loop Contract・37ノード／68リンクが通過。旧EMD／v1・v2 revisionの再現読込、新規音声接続の32000Hz宣言、保存済み48000Hz宣言の保持、LLMによる制御値の変更拒否、MODEL／CLIP両方のpatchと強度fingerprintを検証。
+- 同じH3モデル・2seedのまま音響2欄だけcl-japanese2jsonの短い文面へ変更し、Music応答が無音指定0.630→0.016、台詞指定0.826→0.003へ低下。台詞側のSpeechと音量をほぼ維持し、正規化後もMusicの差を確認。新規コンパイルの既定をv3へ変更。完全無音・台詞一致・一般Sceneでの成功率は未確認。
+- 実H3で同一seed・864×480・20stepsの無音指定12.25秒、指定台詞6.583秒を、従来prompt／NegPiP強度1／3で比較。全50blockのhook適用を確認したが、強度3でもMusic分類応答が残り、BGM除去成功とは扱わない。別の2区間実生成で映像context0／0、音声context0／22、各158frames・32000Hz・210667samplesを確認し、映像追加trimなしで316framesを連結。[条件・数値・限界](negpip-audio-validation.md)を記録。聴感上の連続性・作者台詞の音素一致は未検証。
+
+- 展開ごとの方針・接続指定追加後はPython 111件、ブラウザ側11件、Context LoopのContract・36ノード／65リンク検証が通過。`方針`のUNKNOWN_FIELD解消、auto／cut／continue、作品先頭のcut例外、同一展開内と展開境界での継続、状態不一致の有限回復、異なる背景／出演者の早期拒否、EMD往復、対象Sceneだけへの方針反映、保存・再読込後のGuide22を確認。
+- 実Gemma4 31B（同じQ4_K_S、planner context24576／出力4096、seed42）で2展開・30秒の検証fixtureを構成・詳細化し、15秒cut→15秒continue、直前Sceneへの依存、各展開の追従／固定方針、CAMERA被覆を確認。outline2件・DETAIL2件が全て初回成功、111.5秒。Enhancedの必須出来事は固定fixtureを使用し、生成物・生応答は`output/beat-transitions/`へ保存。今回はH3の継続映像を再生成しておらず、状態配列は実応答では空、非空状態の継承と修正は自動テストで検証した。
+
 - カメラ計画追加後はPython 105件、ブラウザ側11件、Context LoopのContract・36ノード／65リンク検証が通過。新規DETAILのCAMERA先頭制約、各Shotの時間被覆、欠落・空白・重複からの有限回復、成功cacheの再検証、retime、旧EMD互換、Subject割当、continueのGuide22補正を確認。
 - 実Gemma4 31Bで既存30秒3SceneのDETAILを再生成し、全ShotにCAMERAが初回成功。固定／右追従の指定ケースも初回成功し、作者台詞と音響禁止を保持してPlan保存・再読込まで完了。Enhancer／outlineは過去の実応答を再検証して再利用。H3では864×480・20steps・同一seed／素材／モデル設定でCAMERA行だけを追加し、243frames・10.125秒を99.93秒で生成。構図の寄りと前景の視差を確認したが、最後まで正面を保つ指示は未達。Spectrum replayは従来と同じbackend policy transitionで中止され、初回パスを採用。[検証記録](camera-planning-validation.md)に条件と出力先を記載。
 

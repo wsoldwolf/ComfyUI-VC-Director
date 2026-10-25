@@ -13,7 +13,7 @@ from ..utilities.diagnostics import save_diagnostic
 from ..inference.cache import SuccessCache
 
 PROMPT_VERSION = "vcd-story-v4-complete-beats"
-STAGE_PROMPT_VERSIONS = dict(detail="vcd-story-v7-explicit-camera")
+STAGE_PROMPT_VERSIONS = dict(detail="vcd-story-v7-explicit-camera", outline="vcd-story-v5-beat-transition")
 LOGGER = logging.getLogger("vc_director.planning")
 RECORDS = dict(enhance="ENHANCED", outline="SCENES", detail="DETAIL", retime="TIMING")
 DEFINITIONS = dict(enhance="enhanced_story", outline="scene_outline", detail="scene", retime="timing_patch")
@@ -40,10 +40,23 @@ def _remaining_dialogues(payload):
     return beat, [d for d in beat["dialogues"] if d["id"] not in used]
 
 
+def _outline_beat(payload):
+    accepted = {scene["beat_id"] for scene in payload["accepted_outlines"]}
+    beat = next((beat for beat in payload["scenario"]["beats"] if beat["id"] not in accepted), None)
+    require(beat is not None, "OUTLINE_TARGET", "/", "No unplanned beat remains")
+    return beat
+
+
 def system_prompt(stage, payload=None):
     directory = Path(__file__).resolve().parents[2] / "prompts"
     template = (directory / "story_system_prompt.txt").read_text(encoding="utf-8")
     instructions = (directory / f"story_{stage}_prompt.txt").read_text(encoding="utf-8")
+    if stage == "outline" and payload is not None:
+        beat = _outline_beat(payload)
+        previous = payload["accepted_outlines"][-1] if payload["accepted_outlines"] else None
+        instructions += ("\n今回の展開の接続指定: " + beat.get("transition", "auto")
+                         + "\n今回の展開だけの方針: " + canonical(beat.get("direction", []))
+                         + "\n直前Sceneの終端状態: " + canonical(previous["terminal_state"] if previous else []) + "\n")
     if stage == "detail" and payload is not None:
         outline = payload["outline"]
         duration = outline["end_ms"] - outline["start_ms"]
@@ -56,6 +69,8 @@ def system_prompt(stage, payload=None):
                          "previous_scenesのIDを再使用しません。作者の台詞IDだけはそのまま使います。\n"
                          "今回の音響許可の上限: " + canonical(beat["audio"]) + "\n"
                          "今回配置できる未使用台詞ID: " + canonical([d["id"] for d in dialogues]) + "\n")
+        if beat.get("direction"):
+            instructions += "今回の展開だけの方針: " + canonical(beat["direction"]) + "\n"
     return template.format(stage=stage, record_type=RECORDS[stage], stage_instructions=instructions, payload_schema=canonical(_payload_schema(stage)))
 
 
@@ -89,6 +104,20 @@ def generation_schema(stage, payload):
         story["beats"] = dict(type="array", prefixItems=beats, items=False,
                               minItems=len(beats), maxItems=len(beats))
         return result
+    if stage == "outline":
+        beat = _outline_beat(payload)
+        definition = result["$defs"]["scene_outline"]
+        for key, value in dict(beat_id=beat["id"], actor_ids=beat["actor_ids"], background_id=beat["background_id"]).items():
+            definition["properties"][key] = {"const": value}
+        mode = beat.get("transition", "auto")
+        if mode != "auto":
+            definition["properties"]["transition"] = {"const": mode}
+        first = copy.deepcopy(definition)
+        if not payload["accepted_outlines"]:
+            first["properties"].update(transition={"const": "cut"}, depends_on={"const": []})
+        result["properties"]["scenes"] = dict(type="array", prefixItems=[first],
+                                               items={"$ref": "#/$defs/scene_outline"}, minItems=1)
+        return result
     if stage != "detail":
         return result
     definitions = result["$defs"]
@@ -102,6 +131,12 @@ def generation_schema(stage, payload):
         properties["end_ms"] = dict(type="integer", minimum=1, maximum=duration)
     beat, dialogues = _remaining_dialogues(payload)
     audio = definitions["audio_policy"]["properties"]
+    for key in ("continuity", "bgm_suppression"):
+        if key in beat["audio"]:
+            audio[key] = {"const": beat["audio"][key]}
+            definitions["audio_policy"]["required"].append(key)
+        else:
+            audio.pop(key, None)
     for key in ("vocal", "bgm", "ambience", "effects"):
         if beat["audio"][key] == "none" or key == "vocal" and not dialogues:
             audio[key] = {"const": "none"}

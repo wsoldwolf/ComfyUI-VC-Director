@@ -18,7 +18,7 @@
 
 JSONファイルとノードの`plan_json`出力はUTF-8、日本語非エスケープ、2スペースのインデント、末尾改行付きで出力する。Plan / execution間の参照hashは従来どおりキーをソートした空白なしのcanonical JSONを対象とし、metadataのfilesは保存ファイルの実バイトを対象とする。以前の1行JSONも読込可能とする。
 
-metadataの`prompt_policy_version`は音響指示の生成規則を記録する。新規コンパイルは`vcd-audio-v2`で明示的な音楽禁止を出力する。記録のない旧revisionは`vcd-audio-v1`として再コンパイル照合し、保存済みPlanの再現性を維持する。新しい規則で再生成する場合はScene EMDを再コンパイルし、別revisionを保存する。
+metadataの`prompt_policy_version`は音響指示の生成規則を記録する。新規コンパイルは`vcd-audio-v3`でBGMなしの音響文面を簡潔化する。同一seed比較で長い禁止文より抑制が改善したため、全無音はComplete silence、音楽欄はN/Aとする。記録のない旧revisionは`vcd-audio-v1`、明示v2は従来の長い禁止文で再コンパイル照合し、保存済みPlanの再現性を維持する。新しい規則で再生成する場合はScene EMDを再コンパイルし、別revisionを保存する。[比較記録](../implementation/negpip-audio-validation.md)を参照。
 
 ## 2. Compiler
 
