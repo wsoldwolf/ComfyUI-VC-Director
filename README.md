@@ -86,4 +86,8 @@ Node.jsのテストは画像登録UIの複数アップロード、ID競合、失
 
 [仕様](docs/spec/README.md) · [全体ブロック図](docs/assets/vc-director-overview.svg) · [移植元とライセンス](THIRD_PARTY.md)
 
-ソースコードはGPL-3.0-onlyです。再利用したMV-Directorコードの著作権表示とライセンスを保持します。
+## ライセンス
+
+本プロジェクトは **GNU General Public License version 3 only（GPL-3.0-only）** で公開しています。ライセンス全文は[LICENSE](LICENSE)、本プロジェクトの著作権・無保証の通知は[NOTICE](NOTICE)を参照してください。
+
+再利用コードの著作権表示とライセンスは保持し、[THIRD_PARTY.md](THIRD_PARTY.md)へ記録しています。サンプル素材の扱いは[ASSET_LICENSES.md](ASSET_LICENSES.md)を参照してください。

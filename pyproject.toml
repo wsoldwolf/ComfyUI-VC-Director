@@ -18,3 +18,6 @@ vision = ["Pillow>=10", "numpy>=1.24"]
 vc-director = "vc_director.tools.cli:main"
 
 # setup.py maps the MV-style source directories to the vc_director namespace.
+
+[tool.setuptools]
+license-files = ["LICENSE", "NOTICE", "THIRD_PARTY.md", "ASSET_LICENSES.md"]
