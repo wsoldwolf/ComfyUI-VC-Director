@@ -20,6 +20,41 @@ def _schema_grammar(schema):
 
     class PrefixConverter(SchemaConverter):
         def visit(self, value, name):
+            if (value.get("type") == "string" and type(value.get("maxLength")) is int
+                    and not any(key in value for key in ("const", "enum", "oneOf", "anyOf", "allOf", "$ref", "format"))):
+                maximum, minimum = value["maxLength"], value.get("minLength", 0)
+                if "pattern" not in value and type(minimum) is int and 0 <= minimum <= maximum:
+                    # Upstream expands bounded strings into thousands of nested
+                    # optional expressions. Native GBNF supports compact bounds.
+                    # Unlike its generic char rule, exclude literal JSON controls.
+                    char = self._add_rule("vcd-json-char",
+                        r'[^"\\\x00-\x1F] | "\\" (["\\/bfnrt] | "u" [0-9a-fA-F]{4})')
+                    return self._add_rule(name + "-" if name in RESERVED_NAMES else name or "root",
+                        r'"\"" ' + char + f'{{{minimum},{maximum}}}' + r' "\"" space')
+                if maximum > 0 and value.get("pattern") == f"^[a-z][a-z0-9_]{{0,{maximum - 1}}}$":
+                    return self._add_rule(name + "-" if name in RESERVED_NAMES else name or "root",
+                        r'"\"" [a-z] ' + f'[a-z0-9_]{{0,{maximum - 1}}}' + r' "\"" space')
+            if (value.get("type") == "integer" and type(value.get("minimum")) is int
+                    and type(value.get("maximum")) is int
+                    and not any(key in value for key in ("const", "enum", "oneOf", "anyOf", "allOf", "not",
+                                                        "multipleOf", "exclusiveMinimum", "exclusiveMaximum", "$ref"))):
+                from .integer_grammar import bounded_integer
+                return self._add_rule(name + "-" if name in RESERVED_NAMES else name or "root",
+                    bounded_integer(value["minimum"], value["maximum"]) + r" [ \t]{0,8}")
+            sequence = value.get("x-vcd-event-sequence")
+            if sequence:
+                prefix = value["prefixItems"]
+                if len(prefix) != 1 or value.get("minItems") != 1 or not sequence["required"]:
+                    raise ValueError("Unsupported required event sequence")
+                camera = self.visit(prefix[0], f"{name}-camera")
+                between = self.visit(sequence["between"], f"{name}-between")
+                required = [self.visit(item, f"{name}-required-{i}") for i, item in enumerate(sequence["required"])]
+                tail = f' ("," space {between})*'
+                rule = '"[" space ' + camera + tail
+                for event in required:
+                    rule += f' "," space {event}' + tail
+                rule += ' "]" space'
+                return self._add_rule(name + "-" if name in RESERVED_NAMES else name or "root", rule)
             # The installed llama.cpp converter chooses items over prefixItems,
             # silently dropping the mandatory first CAMERA. Handle the one
             # prefix+open-tail form we emit; leave all other schemas upstream.

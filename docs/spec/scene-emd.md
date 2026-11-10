@@ -63,6 +63,8 @@ Scene時刻は作品絶対、Shot / eventはScene相対。予定時刻の実現f
 
 ## 3. 発話と記号
 
+画面・紙・看板へ実際に表示する文字は、映像方針やACTION内で`<visible>文字列</visible>`と記述できる。これは非発声の表示文字を示すVC内部記法であり、作者の本文・言語を翻訳から保護する。例: `@smartphoneに<visible>予想を更新しました</visible>と表示される。` H3用promptでは`『予想を更新しました』`という通常の引用表現へ変換し、内部タグは渡さない。発話は従来どおりDIALOGUEへ置き、表示文字を読み上げる台詞を自動追加しない。通常の動作指示を表示文字として包んで検証を回避しない。
+
 DIALOGUEの本文は「」または既存dタグ。鉤括弧内をPythonで`<d>[Japanese]...</d>`へ変換し、dタグ入力は一切翻訳しない。言語と本文の表記を保存する。DIALOGUE IDは元台詞IDと一致させる。
 
 発話field以外の未escapeの「」・dタグは誤配置として診断する。非発話引用には『』またはescapeを使う。発話span内の@heroや@recipientは原文の一部であり、置換しない。
@@ -96,3 +98,7 @@ DIALOGUEの本文は「」または既存dタグ。鉤括弧内をPythonで`<d>[
 sourceを持つBeat / Dialogue / Constraint / RequiredEventをIDで対応付ける。scenarioとsceneは文書種別、行位置は1始まり・終端行を含む。元シナリオの行位置は保存された値を使い、生成文書の位置から再推定しない。手書きScene由来はsceneを使う。
 
 EMDとtyped artifactは意味を変えずに相互変換する。物語・台詞・状態・出典はシーンEMDへ、Contractと格子補正・素材実体・モデル・翻訳traceは実行metadataへ保存する。
+
+Sceneヘッダーの任意field `* 映像方針:` は、LLMが生成したScene.visual_directionsを保存する。複数行で指定でき、`なし`は空配列を表す。旧Scene EMDで省略されている場合はLLMによる意味分離が済んでいるとは扱わない。
+
+Sceneヘッダーの`* 画面内人物: @hero`（複数はカンマ区切り、人物なしは`なし`）はvisible_actor_idsを保存する。出演とは別で、電話・放送などの画面外話者を含めない。新規detailで生成し、旧EMDで省略した場合は全出演者が画面内にいる扱いとなる。

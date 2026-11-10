@@ -21,6 +21,68 @@ from vc_director.core.utilities import canonical, digest
 
 
 class PlanningTransportTests(unittest.TestCase):
+    def test_coverage_repair_requires_full_scene_shot_and_camera(self):
+        from jsonschema import Draft202012Validator
+        payload, scene = self.silent_detail()
+        duration = payload["outline"]["end_ms"] - payload["outline"]["start_ms"]
+        errors = [dict(code="shot_coverage", path=scene["id"], message="incomplete")]
+        narrowed = generation_schema("detail", payload, errors=errors)
+        validator = Draft202012Validator(narrowed)
+        self.assertTrue(validator.is_valid(scene))
+        for target in ("shot", "camera"):
+            changed = copy.deepcopy(scene)
+            item = changed["shots"][0] if target == "shot" else changed["shots"][0]["events"][0]
+            item["end_ms"] = duration // 2
+            self.assertFalse(validator.is_valid(changed), target)
+        repeated = copy.deepcopy(scene)
+        repeated["visual_directions"] = ["Same instruction."] * 9
+        self.assertFalse(validator.is_valid(repeated))
+        # Ordinary generation still permits multiple Shots/cameras.
+        self.assertNotIn("maxItems", generation_schema("detail", payload)["$defs"]["scene"]["properties"]["shots"])
+        if importlib.util.find_spec("llama_cpp"):
+            from llama_cpp import LlamaGrammar
+            LlamaGrammar.from_string(record_grammar("DETAIL", payload_schema=narrowed), verbose=False)
+
+    def test_detail_schema_requires_every_active_actor_once(self):
+        from jsonschema import Draft202012Validator
+        payload, scene = self.silent_detail()
+        first = payload["outline"]["actor_ids"][0]
+        payload["outline"]["actor_ids"] = [first, "caller"]
+        scene["actor_ids"] = [first, "caller"]
+        scene["subject_descriptions"].append(dict(actor_id="caller", text="A telephone caller."))
+        scene["retention"].append(dict(actor_id="caller", mode="fully_preserved"))
+        validator = Draft202012Validator(generation_schema("detail", payload))
+        self.assertTrue(validator.is_valid(scene))
+        for name in ("subject_descriptions", "retention"):
+            for mode in ("missing", "duplicate", "extra", "unknown"):
+                changed = copy.deepcopy(scene)
+                if mode == "missing":
+                    changed[name].pop()
+                elif mode == "duplicate":
+                    changed[name][1]["actor_id"] = first
+                elif mode == "extra":
+                    changed[name].append(copy.deepcopy(changed[name][0]))
+                else:
+                    changed[name][1]["actor_id"] = "unknown"
+                self.assertFalse(validator.is_valid(changed), (name, mode))
+        payload["outline"]["actor_ids"] = []
+        empty_schema = generation_schema("detail", payload)["$defs"]["scene"]["properties"]
+        for name in ("subject_descriptions", "retention"):
+            self.assertEqual(empty_schema[name], {"const": []})
+
+    @unittest.skipUnless(importlib.util.find_spec("llama_cpp"), "native grammar converter unavailable")
+    def test_native_detail_grammar_preserves_exact_actor_tuple(self):
+        payload, scene = self.silent_detail()
+        payload["outline"]["actor_ids"] = ["maho", "risa"]
+        grammar = record_grammar("DETAIL", payload_schema=generation_schema("detail", payload))
+        from llama_cpp import LlamaGrammar
+        LlamaGrammar.from_string(grammar, verbose=False)
+        # Both tuple slots must survive native conversion, including retention.
+        for field in ("subject-descriptions", "retention"):
+            self.assertIn(f'{field}-tuple-0-actor-id ::= "\\\"maho\\\""', grammar)
+            self.assertIn(f'{field}-tuple-1-actor-id ::= "\\\"risa\\\""', grammar)
+            self.assertIn(f'{field} ::= "[" space {field}-tuple-0 "," space {field}-tuple-1 "]" space', grammar)
+
     @staticmethod
     def silent_detail():
         scenario = parse((ROOT / "assets/emd/minimal.scenario.emd").read_text(encoding="utf-8"))
@@ -28,6 +90,8 @@ class PlanningTransportTests(unittest.TestCase):
         outline = fixture("outline-response")["records"][0]["payload"]["scenes"][0]
         outline.update(start_ms=10000, end_ms=20000)
         scene = english_document()["scenes"][0]
+        scene["visual_directions"] = []
+        scene["visible_actor_ids"] = list(outline["actor_ids"])
         scene.update(outline)
         scene["audio"] = copy.deepcopy(DEFAULT_AUDIO)
         scene["shots"][0]["events"] = scene["shots"][0]["events"][:1]
@@ -186,6 +250,8 @@ class PlanningTransportTests(unittest.TestCase):
         narrowed = generation_schema("detail", payload)
         validator = Draft202012Validator(narrowed)
         scene = english_document()["scenes"][0]
+        scene["visual_directions"] = []
+        scene["visible_actor_ids"] = list(outline["actor_ids"])
         scene["shots"][0]["events"][1]["text"] = scenario["beats"][0]["dialogues"][0]["text"]
         scene = with_camera(scene)
         self.assertTrue(validator.is_valid(scene))

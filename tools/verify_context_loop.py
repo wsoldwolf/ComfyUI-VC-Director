@@ -88,7 +88,10 @@ def verify(runtime_root, object_info=None):
 
     result = compile_scene_emd((ROOT / "assets/emd/minimal.scene.emd").read_text(encoding="utf-8"))
     policy = invoke(nodes[30])[0]
-    normalized = invoke(nodes[24], plan_json_input=json.dumps(result.plan, ensure_ascii=False), chain_policy=policy)[0]
+    normalized = invoke(nodes[24], plan_json_input=json.dumps(result.plan, ensure_ascii=False), chain_policy=policy,
+                        run_name=result.document["project_id"])[0]
+    assert normalized["run_name"] == result.document["project_id"]
+    assert Path(chain._project_run_dir(normalized)).name == result.document["project_id"]
     assert normalized["shots"][0]["raw_frames"] == result.plan["shots"][0]["length"]
     assert normalized["shots"][0]["prompt"] == result.plan["shots"][0]["prompt"]
     assert normalized["shots"][0]["audio_context_length"] == 0

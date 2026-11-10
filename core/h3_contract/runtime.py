@@ -19,5 +19,8 @@ def conditioning_inputs(result, shared_registry, scene_index, prompt, length, ru
     active = []
     for binding in segment["reference_bindings"]:
         if binding["role"] != "video_audio" and binding["asset_id"] not in [a["id"] for a in active]:
-            active.append(assets[binding["asset_id"]])
+            asset = assets[binding["asset_id"]]
+            if asset["kind"] == "video" and not any(b["asset_id"] == asset["id"] and b["role"] == "video_audio" for b in segment["reference_bindings"]):
+                asset = dict(asset, paired_audio_enabled=False)
+            active.append(asset)
     return active

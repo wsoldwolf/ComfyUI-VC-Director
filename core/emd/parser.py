@@ -3,6 +3,7 @@ import re
 from dataclasses import dataclass
 
 from ..audio import AUDIO_KEYS, dialogue, parse_audio
+from ..audio.nonverbal import voice_ids
 from ..errors import VCError, require
 from ..artifacts.schema import validate
 from ..artifacts.transitions import validate_beat_transitions
@@ -28,6 +29,13 @@ def escape(value):
     return str(value).replace("\\", "\\\\").replace("\n", "\\n").replace("|", "\\|")
 
 
+class Records(list):
+    """Transient block location; never part of parsed artifacts or their hashes."""
+    def __init__(self, block):
+        super().__init__()
+        self.line = block.line
+
+
 @dataclass
 class Block:
     title: str
@@ -36,7 +44,7 @@ class Block:
     lines: list
 
     def records(self, allowed, prefixes=(), body=False):
-        result, prose, seen = [], [], set()
+        result, prose, seen = Records(self), [], set()
         for line, text in self.lines:
             if not text.strip():
                 continue
@@ -49,7 +57,7 @@ class Block:
             key, value = match.groups()
             if key not in allowed and not any(key.startswith(p) for p in prefixes):
                 raise VCError("UNKNOWN_FIELD", key, "Unknown field", line)
-            repeat = key == "方針"
+            repeat = key in {"方針", "映像方針"}
             if key in seen and not repeat:
                 raise VCError("DUPLICATE_FIELD", key, "Repeated field", line)
             seen.add(key)
@@ -73,7 +81,8 @@ def blocks(text):
 
 def _value(records, key, default=None, required=False):
     values = [unescape(v) for k, v, _ in records if k == key]
-    require(bool(values) or not required, "MISSING_FIELD", key, "Required field is missing")
+    if not values and required:
+        raise VCError("MISSING_FIELD", key, "Required field is missing", getattr(records, "line", None))
     return values[0] if values else default
 
 
@@ -100,9 +109,13 @@ def _dialogues(records, kind):
         if not key.startswith("台詞 "):
             continue
         parts = value.split(" | ", 1)
-        require(len(parts) == 2 and re.fullmatch("@" + ID, parts[0]), "DIALOGUE", key, "Expected @speaker | dialogue")
+        if not (len(parts) == 2 and re.fullmatch("@" + ID, parts[0])):
+            raise VCError("DIALOGUE", key, "Expected @speaker | dialogue", line)
         text = unescape(parts[1])
-        _, language = dialogue(text)
+        try:
+            _, language = dialogue(text)
+        except VCError as error:
+            raise VCError(error.diagnostic.code, key, error.diagnostic.message, line) from error
         result.append(dict(id=key[3:], actor_id=parts[0][1:], text=text, language=language,
                            source=dict(document=kind, first_line=line, last_line=line)))
     return result
@@ -116,8 +129,19 @@ def parse(text):
     schema_id = _value(form, "schema", required=True)
     require(schema_id in {"VCD_SCENARIO_EMD_V1", "VCD_SCENE_EMD_V1"}, "EMD_VERSION", "schema", "Unsupported EMD schema")
     is_scene = schema_id == "VCD_SCENE_EMD_V1"
+    patterns = {}
+    for block in all_blocks[1:]:
+        if block.title.startswith("発声パターン "):
+            name = block.title.split(" ", 1)[1]
+            require(block.level == 1 and re.fullmatch(ID, name) and name not in patterns,
+                    "VOCAL_PATTERN", name, "Use a unique pattern ID")
+            records, _ = block.records({"許可", "頻度", "強さ", "指示"})
+            patterns[name] = dict(allowed=voice_ids(_value(records, "許可", required=True)),
+                frequency=_value(records, "頻度", "控えめ"), intensity=_value(records, "強さ", "弱め"),
+                instruction=_value(records, "指示", ""), pattern=None)
     kind = "scene" if is_scene else "scenario"
     actors, backgrounds, beats, constraints, required_events = [], [], [], [], []
+    props = []
     project, source_table, scenes = None, {}, []
     scenario_count = 0
     index = 1
@@ -127,15 +151,17 @@ def parse(text):
         if title.startswith("Scene "):
             require(is_scene, "EMD_HEADER", title, "Scene is only valid in scene EMD")
             require(project is not None, "EMD_ORDER", title, "作品 must precede Scene")
-            scene, index = _parse_scene(all_blocks, index, project["audio"], {b["id"]: b["audio"] for b in beats})
+            scene, index = _parse_scene(all_blocks, index, project["audio"], {b["id"]: b["audio"] for b in beats}, patterns)
             scenes.append(scene)
             continue
         require(not scenes, "EMD_ORDER", title, "Definitions must precede Scenes")
-        if title == "作品":
+        if title.startswith("発声パターン "):
+            pass
+        elif title == "作品":
             require(project is None and block.level == 1, "DUPLICATE", title, "Only one # 作品 is allowed")
             records, _ = block.records({"id", "尺", "方針", "元シナリオhash"} | AUDIO_KEYS, ("音声参照 ",))
             project = dict(project_id=_value(records, "id", required=True), duration_ms=time_ms(_value(records, "尺")) if _value(records, "尺") else None,
-                           audio=parse_audio([(k, unescape(v), n) for k, v, n in records]), direction=[unescape(v) for k, v, _ in records if k == "方針"])
+                           audio=parse_audio([(k, unescape(v), n) for k, v, n in records], patterns=patterns), direction=[unescape(v) for k, v, _ in records if k == "方針"])
             if is_scene:
                 project["scenario_sha256"] = _nullable(_value(records, "元シナリオhash"))
         elif re.fullmatch("人物 @" + ID, title) and block.level == 1:
@@ -145,6 +171,13 @@ def parse(text):
                     "特徴を記述してください。シナリオで画像を指定しVisionまたはimage_factsで補完する場合は省略できます。")
             actors.append(dict(id=title[4:], name=_value(records, "名前", required=True), description=description,
                                image_asset_id=image_id, video_asset_id=_nullable(_value(records, "動画")), voice_asset_id=_nullable(_value(records, "声質音声"))))
+        elif re.fullmatch("小物 @" + ID, title) and block.level == 1:
+            records, _ = block.records({"名前", "特徴", "画像", "寸法", "画像内位置"})
+            props.append(dict(id=title[4:], name=_value(records, "名前", required=True),
+                              description=_value(records, "特徴", required=True),
+                              image_asset_id=_nullable(_value(records, "画像")), size=_nullable(_value(records, "寸法"))))
+            if any(k == "画像内位置" for k, _, _ in records):
+                props[-1]["reference_hint"] = _nullable(_value(records, "画像内位置"))
         elif re.fullmatch("背景 " + ID, title) and block.level == 1:
             records, _ = block.records({"画像", "情景"})
             description, image_id = _value(records, "情景", ""), _nullable(_value(records, "画像"))
@@ -157,14 +190,16 @@ def parse(text):
         elif (re.fullmatch("展開 " + ID, title) and not is_scene and block.level == 2) or (re.fullmatch("展開定義 " + ID, title) and is_scene and block.level == 1):
             require(project is not None, "EMD_ORDER", title, "作品 must precede beats")
             require(is_scene or scenario_count == 1, "EMD_ORDER", title, "Expected # シナリオ")
-            records, prose = block.records({"出演", "背景", "原文", "方針", "接続"} | AUDIO_KEYS, ("台詞 ", "必須出来事 ", "音声参照 "), body=not is_scene)
+            records, prose = block.records({"出演", "小物", "背景", "原文", "方針", "接続"} | AUDIO_KEYS, ("台詞 ", "必須出来事 ", "音声参照 "), body=not is_scene)
             beat_id = title.split(" ")[1]
             beats.append(dict(id=beat_id, text=_value(records, "原文", prose), actor_ids=_ids(_value(records, "出演", required=True), True),
                               background_id=_value(records, "背景", required=True), source=_span(block, kind), dialogues=_dialogues(records, kind),
-                              audio=parse_audio([(k, unescape(v), n) for k, v, n in records], project["audio"])))
+                              audio=parse_audio([(k, unescape(v), n) for k, v, n in records], project["audio"], patterns)))
             directions = [unescape(v) for k, v, _ in records if k == "方針"]
             if directions:
                 beats[-1]["direction"] = directions
+            if any(k == "小物" for k, _, _ in records):
+                beats[-1]["prop_ids"] = _ids(_value(records, "小物"), True)
             for key, value, line in records:
                 if key == "接続":
                     mode = unescape(value)
@@ -190,6 +225,17 @@ def parse(text):
         index += 1
     require(project is not None and bool(beats), "EMD_REQUIRED", "/", "作品 and at least one beat are required")
     result = dict(project, actors=actors, backgrounds=backgrounds, beats=beats, constraints=constraints)
+    if patterns:
+        result["vocal_patterns"] = patterns
+    if props:
+        from ..artifacts.props import tag_ids
+        result["props"] = props
+        for beat in beats:
+            if "prop_ids" not in beat:
+                used = tag_ids([beat["text"], *beat.get("direction", [])])
+                selected = [prop["id"] for prop in props if prop["id"] in used]
+                if selected:
+                    beat["prop_ids"] = selected
     if is_scene:
         require(bool(scenes) and result["duration_ms"] is not None, "EMD_REQUIRED", "/", "Scene EMD requires 尺 and Scenes")
         owners = beats + constraints + required_events + [d for b in beats for d in b["dialogues"]]
@@ -206,16 +252,23 @@ def parse(text):
     return result
 
 
-def _parse_scene(all_blocks, index, default_audio, beat_audio=None):
+def _parse_scene(all_blocks, index, default_audio, beat_audio=None, patterns=None):
     head = all_blocks[index]
     match = re.fullmatch(f"Scene ({ID}) ({TIME}) --> ({TIME})", head.title)
     require(match is not None and head.level == 1, "SCENE_HEADER", head.title, "Invalid Scene header")
-    records, _ = head.records({"展開", "出演", "背景", "接続", "依存", "固定", "必須出来事"}, ("開始状態 ", "終了状態 "))
+    records, _ = head.records({"展開", "出演", "小物", "画面内小物", "背景", "接続", "依存", "固定", "必須出来事", "映像方針", "画面内人物"}, ("開始状態 ", "終了状態 "))
     scene = dict(id=match[1], start_ms=time_ms(match[2]), end_ms=time_ms(match[3]), beat_id=_value(records, "展開", required=True),
                  actor_ids=_ids(_value(records, "出演", required=True), True), background_id=_value(records, "背景", required=True),
                  transition=_value(records, "接続", required=True), depends_on=_ids(_value(records, "依存", required=True)),
                  locked=[] if _value(records, "固定", required=True) == "なし" else [s.strip() for s in _value(records, "固定").split(",")],
                  required_event_ids=_ids(_value(records, "必須出来事", "なし")), initial_state=[], terminal_state=[], shots=[], sound_events=[])
+    if any(key == "映像方針" for key, _, _ in records):
+        scene["visual_directions"] = [unescape(value) for key, value, _ in records if key == "映像方針" and value != "なし"]
+    if any(key == "画面内人物" for key, _, _ in records):
+        scene["visible_actor_ids"] = _ids(_value(records, "画面内人物"), True)
+    for label, field in (("小物", "prop_ids"), ("画面内小物", "visible_prop_ids")):
+        if any(key == label for key, _, _ in records):
+            scene[field] = _ids(_value(records, label), True)
     for key, value, line in records:
         for label, target in (("開始状態 ", "initial_state"), ("終了状態 ", "terminal_state")):
             if key.startswith(label):
@@ -251,11 +304,12 @@ def _parse_scene(all_blocks, index, default_audio, beat_audio=None):
                 for line, text in shot_block.lines:
                     if not text.strip():
                         continue
-                    e = re.fullmatch(f"\\* (ACTION|CAMERA|DIALOGUE) ({ID}) ({TIME}) --> ({TIME}) \\| (@{ID}|environment) \\| (.+)", text)
-                    require(e is not None, "EVENT", shot_block.title, f"Invalid event at line {line}")
+                    e = re.fullmatch(f"\\* (ACTION|CAMERA|DIALOGUE|NONVERBAL) ({ID}) ({TIME}) --> ({TIME}) \\| (@{ID}|environment) \\| (.+)", text)
+                    if e is None:
+                        raise VCError("EVENT", shot_block.title, "Invalid event", line)
                     event_text = unescape(e[6])
                     is_dialogue = e[1] == "DIALOGUE"
-                    events.append(dict(id=e[2], kind=e[1].lower(), start_ms=time_ms(e[3]), end_ms=time_ms(e[4]), actor_id=e[5].lstrip("@"), text=event_text,
+                    events.append(dict(id=e[2], kind="vocal" if e[1] == "NONVERBAL" else e[1].lower(), start_ms=time_ms(e[3]), end_ms=time_ms(e[4]), actor_id=e[5].lstrip("@"), text=event_text,
                                        dialogue_id=e[2] if is_dialogue else None, language=dialogue(event_text)[1] if is_dialogue else None))
                 scene["shots"].append(dict(id=m[1], start_ms=time_ms(m[2]), end_ms=time_ms(m[3]), events=events))
         elif section == "overall_soundscape":
@@ -265,7 +319,8 @@ def _parse_scene(all_blocks, index, default_audio, beat_audio=None):
                     continue
                 if re.match(r"\* (EFFECT|AMBIENCE) ", text):
                     m = re.fullmatch(f"\\* (EFFECT|AMBIENCE) ({ID}) ({TIME}) --> ({TIME}) \\| ({ID}|なし) \\| (.+)", text)
-                    require(m is not None, "SOUND_EVENT", scene["id"], f"Invalid sound event at line {line}")
+                    if m is None:
+                        raise VCError("SOUND_EVENT", scene["id"], "Invalid sound event", line)
                     scene["sound_events"].append(dict(id=m[2], kind=m[1].lower(), start_ms=time_ms(m[3]), end_ms=time_ms(m[4]), trigger_event_id=_nullable(m[5]), text=unescape(m[6])))
                 else:
                     policy_lines.append((line, text))
@@ -274,7 +329,7 @@ def _parse_scene(all_blocks, index, default_audio, beat_audio=None):
             audio.extend(block.records({"BGM"})[0])
     keys = [k for k, _, _ in audio]
     require(len(keys) == len(set(keys)), "DUPLICATE_FIELD", scene["id"], "Duplicate audio field across sections")
-    scene["audio"] = parse_audio([(k, unescape(v), n) for k, v, n in audio], (beat_audio or {}).get(scene["beat_id"], default_audio))
+    scene["audio"] = parse_audio([(k, unescape(v), n) for k, v, n in audio], (beat_audio or {}).get(scene["beat_id"], default_audio), patterns)
     return scene, index
 
 

@@ -5,7 +5,7 @@ from ..emd import ID, escape
 from ..errors import require
 from ..inference import _LOCK, interrupt, runtime_config
 from ..utilities import canonical, digest
-from ..inference.cache import SuccessCache
+from ..inference.cache_policy import PipelineCache as SuccessCache
 from .llama_cpp_vision import LlamaCppVisionLifecycle
 from .observation import VisionObservationRequest, observe_image, compose_image_to_subject, VISION_PROMPT_VERSION, build_vision_request
 from .image_data import prepare_comfy_image

@@ -87,7 +87,9 @@ class CameraPlanningTests(unittest.TestCase):
         backend = FakeBackend(["SCENES\t1\t" + canonical(outline),
                                "DETAIL\t1\t" + canonical(legacy), "DETAIL\t1\t" + canonical(good)])
         document = StoryTimelinePlanner(StageRunner(backend)).plan(scenario, enhanced)
-        self.assertEqual(document["scenes"], [good])
+        expected = copy.deepcopy(good)
+        expected["summary"] = "@heroが駅を出て町を見渡す。"
+        self.assertEqual(document["scenes"], [expected])
         self.assertEqual(backend.requests[-1]["retry"], "repair")
         self.assertEqual(backend.requests[-1]["errors"][0]["code"], "camera_missing")
         self.assertEqual(good["shots"][0]["events"][1:], legacy["shots"][0]["events"])

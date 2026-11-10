@@ -97,6 +97,9 @@ def load(project_root, asset_root=None, runtime_root=None):
     class ReplayTranslator:
         def __init__(self):
             self.mapping = {t["source"]: t["translated"] for t in metadata["translation_trace"]}
+            self.context_mapping = {(t["source"], t["owner_subject"], t["explicit_people"],
+                                     tuple(sorted(t["subject_roles"].items())) if "subject_roles" in t else None): t["translated"]
+                                    for t in metadata["translation_trace"] if "owner_subject" in t}
 
         def __call__(self, text):
             require(text in self.mapping, "TRANSLATION_TRACE", "/", "Missing saved translation")
@@ -105,6 +108,15 @@ def load(project_root, asset_root=None, runtime_root=None):
         def translate_protected(self, fragments, values):
             source = "".join(part + (values[i] if i < len(values) else "") for i, part in enumerate(fragments))
             return self(source)
+
+        def translate_actor_protected(self, fragments, values, actors, *, explicit_people=False,
+                                      owner_subject=None, allow_bound_pronouns=False, subject_roles=None):
+            if not allow_bound_pronouns:
+                return self.translate_protected(fragments, values)
+            source = "".join(part + (values[i] if i < len(values) else "") for i, part in enumerate(fragments))
+            key = (source, owner_subject, explicit_people, tuple(sorted(subject_roles.items())) if subject_roles is not None else None)
+            require(key in self.context_mapping, "TRANSLATION_TRACE", "/", "Missing saved translation for this field owner")
+            return self.context_mapping[key]
 
     replay = compile_scene_emd(contents["scenes.emd"], execution["assets"], ReplayTranslator(),
                                prompt_policy=metadata.get("prompt_policy_version", LEGACY_PROMPT_POLICY),

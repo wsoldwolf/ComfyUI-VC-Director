@@ -3,11 +3,13 @@ import copy
 import re
 
 from ..errors import VCError, require
+from .nonverbal import MODES, permits_dialogue, permits_nonverbal, voice_ids
 
 DEFAULT_AUDIO = dict(vocal="none", bgm="none", bgm_description=None,
                      ambience="none", ambience_description=None,
                      effects="none", effects_description=None, reference_audio=[])
-AUDIO_KEYS = {"発声", "BGM", "環境音", "効果音", "音響", "音声参照", "音声接続", "BGM抑制"}
+AUDIO_KEYS = {"発声", "BGM", "環境音", "効果音", "音響", "音声参照", "音声接続", "BGM抑制",
+              "発声パターン", "発声指示", "非言語発声", "発声頻度", "発声強度"}
 
 
 def dialogue(text):
@@ -26,8 +28,14 @@ def no_speech_markup(text, path):
             "Remove quoted dialogue and <d> tags from this prose field. Keep the exact authored speech only in DIALOGUE events; do not remove the DIALOGUE events.")
 
 
-def parse_audio(records, parent=None):
+def parse_audio(records, parent=None, patterns=None):
     result = copy.deepcopy(parent or DEFAULT_AUDIO)
+    # Resolve a named pattern before applying local overrides, independent of field order.
+    selected = next((v for k, v, _ in records if k == "発声パターン"), None)
+    if selected is not None:
+        require(patterns is not None and selected in patterns, "VOCAL_PATTERN", selected, "Unknown vocal pattern")
+        result["nonverbal"] = copy.deepcopy(patterns[selected])
+        result["nonverbal"]["pattern"] = selected
     for key, value, line in records:
         if key == "音響":
             require(value == "無音", "AUDIO_POLICY", str(line), "音響 accepts 無音")
@@ -39,8 +47,12 @@ def parse_audio(records, parent=None):
             require(value in allowed, "AUDIO_POLICY", str(line), key + " accepts " + " / ".join(sorted(allowed)))
             result[field] = value
         elif key == "発声":
-            require(value in {"なし", "指定台詞のみ"}, "AUDIO_POLICY", str(line), "Unknown vocal permission")
-            result["vocal"] = "none" if value == "なし" else "dialogue"
+            require(value in MODES, "AUDIO_POLICY", str(line), "Unknown vocal permission")
+            result["vocal"] = MODES[value]
+        elif key in {"発声指示", "非言語発声", "発声頻度", "発声強度"}:
+            config = result.setdefault("nonverbal", dict(allowed=[], frequency="控えめ", intensity="弱め", instruction="", pattern=None))
+            field = {"発声指示": "instruction", "非言語発声": "allowed", "発声頻度": "frequency", "発声強度": "intensity"}[key]
+            config[field] = voice_ids(value) if field == "allowed" else value
         elif key in {"BGM", "環境音", "効果音"}:
             target = {"BGM": "bgm", "環境音": "ambience", "効果音": "effects"}[key]
             if value == "なし":
@@ -69,6 +81,14 @@ def parse_audio(records, parent=None):
 
 
 def validate_audio(policy, path, parent=None):
+    if permits_nonverbal(policy):
+        require(bool(policy.get("nonverbal", {}).get("allowed")), "NONVERBAL_PERMISSION", path,
+                "非言語発声又は発声パターンで許可する声を指定してください")
+    config = policy.get("nonverbal")
+    if config:
+        require(config["frequency"] in {"控えめ", "動作に合わせる", "多め"} and config["intensity"] in {"弱め", "中程度", "強め"},
+                "NONVERBAL_POLICY", path, "Invalid frequency or intensity")
+        no_speech_markup(config["instruction"], path + "/nonverbal/instruction")
     require(policy.get("bgm_suppression", "prompt") != "negpip" or policy["bgm"] == "none",
             "AUDIO_SUPPRESSION", path, "BGM抑制: negpipはBGM: なしの区間で使用してください。BGMを生成する区間はBGM抑制: promptに変更してください。")
     for key in ("bgm", "ambience", "effects"):
@@ -82,6 +102,9 @@ def validate_audio(policy, path, parent=None):
         field = "bgm" if ref["purpose"] == "music" else ref["purpose"]
         require(policy[field] != "none", "AUDIO_REFERENCE", path, f"Reference for disabled {field}")
     if parent:
+        require(not permits_dialogue(policy) or permits_dialogue(parent), "AUDIO_PERMISSION", path, "Parent forbids dialogue")
+        require(not permits_nonverbal(policy) or permits_nonverbal(parent), "AUDIO_PERMISSION", path, "Parent forbids nonverbal voice")
+        require(policy.get("nonverbal") == parent.get("nonverbal"), "AUDIO_PERMISSION", path, "Keep authored nonverbal settings unchanged")
         for key, default in (("continuity", "auto"), ("bgm_suppression", "prompt")):
             require(policy.get(key, default) == parent.get(key, default), "AUDIO_CONTROL", f"{path}/audio/{key}",
                     f"Keep the authored {key}={parent.get(key, default)!r}; do not change audio control policy.")
@@ -93,6 +116,14 @@ def validate_audio(policy, path, parent=None):
 
 
 def directives(policy, *, explicit=False, compact=False):
+    if permits_nonverbal(policy):
+        text = ("Only the assigned speaker speaks the exact <d> words during the specified dialogue intervals. "
+                if permits_dialogue(policy) else "No spoken words or dialogue. ")
+        text += "Only the explicitly timed NONVERBAL events may add wordless character sounds. No extra words, narration, singing or humming. Never read descriptions aloud. No vocalization outside dialogue and NONVERBAL intervals."
+        for key, label in (("bgm", "background or diegetic music"), ("ambience", "ambience"), ("effects", "sound effects")):
+            if policy[key] == "none":
+                text += " No " + label + "."
+        return text + " Audio references condition timbre only; do not recite their content."
     if compact:
         physical = any(policy[k] != "none" for k in ("ambience", "effects"))
         if policy["vocal"] == "none":
@@ -123,7 +154,16 @@ def directives(policy, *, explicit=False, compact=False):
 
 
 def audio_records(policy):
-    records = [("発声", "なし" if policy["vocal"] == "none" else "指定台詞のみ")]
+    records = [("発声", next(label for label, mode in MODES.items() if mode == policy["vocal"]))]
+    if "nonverbal" in policy:
+        from .nonverbal import VOICE_LABEL
+        config = policy["nonverbal"]
+        if config["pattern"]:
+            records.append(("発声パターン", config["pattern"]))
+        records.extend([("非言語発声", ", ".join(VOICE_LABEL[v] for v in config["allowed"])),
+                        ("発声頻度", config["frequency"]), ("発声強度", config["intensity"])])
+        if config["instruction"]:
+            records.append(("発声指示", config["instruction"]))
     for label, field in (("音声接続", "continuity"), ("BGM抑制", "bgm_suppression")):
         if field in policy:
             records.append((label, policy[field]))

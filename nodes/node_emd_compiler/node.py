@@ -1,7 +1,8 @@
 """ComfyUI adapter; public node surface is preserved."""
 from pathlib import Path
 from ...core.compiler import compile_scene_emd
-from ...core.emd import parse
+from ...core.emd.diagnostics import parse_checked
+from ...core.emd.preflight import preflight
 from ...core.inference import GemmaTranslator
 from ...core.artifacts.storage import save
 from ...core.utilities import pretty_json
@@ -20,12 +21,14 @@ class VCDirectorCompileSave:
 
     def compile_save(self, scene_emd, registry, output_root, model_name, seed, prompt=None, inference_settings=None):
         _guard(prompt)
+        document = parse_checked(scene_emd)
+        preflight(document, scene_emd, registry)
         if not output_root:
             import folder_paths
             output_root = str(Path(folder_paths.get_output_directory()) / "vc_director")
         backend = None if model_name == "none" else _backend(model_name, seed=seed, stage="compiler", inference_settings=inference_settings)
         try:
-            project_id = parse(scene_emd)["project_id"]
+            project_id = document["project_id"]
             result = compile_scene_emd(scene_emd, registry["assets"], GemmaTranslator(backend, cache_root() / "translation",
                                        diagnostics_root=Path(output_root) / project_id / "diagnostics") if backend else None)
             directory = save(result, output_root, run_details=dict(model=backend.identity() if backend else None))

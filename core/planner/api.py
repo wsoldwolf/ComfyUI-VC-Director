@@ -1,12 +1,18 @@
 """Timeline construction, scene detail and numeric retiming."""
 import copy
+from ..utilities.progress import emit_progress
 
 from ..errors import VCError, require
 from ..artifacts.schema import validate
 from ..artifacts.validation import unique, validate_story
 from ..artifacts.transitions import validate_scene_transition
+from ..artifacts.actor_references import bind_scene_actor_references
+from ..artifacts.identifiers import resolve_required_event_ids
+from ..artifacts.coverage import validate_required_coverage
 from ..vision.image_facts import apply_image_facts, apply_scene_image_facts
 from .camera import validate_camera_plan
+from .identifiers import resolve_generated_ids
+from .budget import allocate_beat_windows
 
 
 class StoryTimelinePlanner:
@@ -20,31 +26,30 @@ class StoryTimelinePlanner:
         validate_story(scenario)
         validate(enhanced, "enhanced_story")
         require(enhanced["scenario_sha256"] == scenario["source_sha256"], "ENHANCED_SOURCE", "/", "Enhancer scenario mismatch")
-        outlines, scenes = [], []
+        # Accept old EnhancedStory caches through the same allocation boundary.
+        # Do this before outlines introduce required_event_ids references.
+        enhanced = copy.deepcopy(enhanced)
+        remapped = resolve_required_event_ids(scenario, enhanced)
+        if remapped:
+            self.runner.trace.append(dict(stage="required_event_ids", source="planner", remapped=remapped))
+        scenes = []
         required = [e for b in enhanced["beats"] for e in b["required_events"]]
-        for beat in scenario["beats"]:
-            def check(result):
-                accepted = outlines[:]
-                local_required = []
-                for outline in result["scenes"]:
-                    require(outline["beat_id"] == beat["id"] and set(outline["actor_ids"]) == set(beat["actor_ids"]) and outline["background_id"] == beat["background_id"], "OUTLINE_BINDING", outline["id"], "Wrong beat, cast or background")
-                    start = accepted[-1]["end_ms"] if accepted else 0
-                    require(outline["start_ms"] == start and 0 < outline["end_ms"] - start <= 15000, "OUTLINE_TIMING", outline["id"], "Scenes must be contiguous and <=15 seconds")
-                    require(outline["id"] not in {s["id"] for s in accepted} and set(outline["depends_on"]) <= {s["id"] for s in accepted}, "OUTLINE_DEPENDENCY", outline["id"], "Duplicate or forward dependency")
-                    validate_scene_transition(outline, accepted[-1] if accepted else None, beat, code="OUTLINE_TRANSITION")
-                    local_required.extend(outline["required_event_ids"])
-                    accepted.append(outline)
-                expected = [e["id"] for e in required if e["beat_id"] == beat["id"]]
-                require(sorted(local_required) == sorted(expected), "OUTLINE_REQUIRED", beat["id"], "Every required event must be assigned once")
-                if beat is scenario["beats"][-1] and scenario["duration_ms"] is not None:
-                    require(accepted[-1]["end_ms"] == scenario["duration_ms"], "OUTLINE_DURATION", beat["id"], "Final outline does not match authored duration")
-            result = self.runner.run("outline", beat["id"], dict(scenario=scenario, enhanced=enhanced, accepted_outlines=outlines[:]), check)
-            outlines.extend(result["scenes"])
-        for outline in outlines:
+        outlines = self._plan_outlines(scenario, enhanced)
+        for scene_index, outline in enumerate(outlines):
+            emit_progress("unit", stage="detail", index=scene_index, total=len(outlines), label=outline["id"])
             beat = next(b for b in scenario["beats"] if b["id"] == outline["beat_id"])
+            last = not any(o["beat_id"] == beat["id"] for o in outlines[outlines.index(outline) + 1:])
+            used_dialogues = {e["dialogue_id"] for previous in scenes for shot in previous["shots"]
+                              for e in shot["events"] if e["kind"] == "dialogue"}
+            required_dialogue_ids = [d["id"] for d in beat["dialogues"] if d["id"] not in used_dialogues] if last else []
 
             def check(scene):
                 require(all(scene[k] == v for k, v in outline.items()), "OUTLINE_CHANGED", scene["id"], "Detail changed approved outline fields")
+                remapped = resolve_generated_ids(scene, scenes, [item["id"] for item in outlines],
+                    authored_dialogue_ids=[d["id"] for b in scenario["beats"] for d in b["dialogues"]])
+                if remapped:
+                    self.runner.trace.append(dict(stage="generated_ids", scene_id=scene["id"], remapped=remapped))
+                bind_scene_actor_references(scene, scenario["actors"])
                 # Validate this Scene with a narrowed, zero-based local document.
                 local_scene = copy.deepcopy(scene)
                 local_scene.update(start_ms=0, end_ms=scene["end_ms"] - scene["start_ms"], transition="cut", depends_on=[])
@@ -53,9 +58,12 @@ class StoryTimelinePlanner:
                 used = [e["dialogue_id"] for s in scenes for sh in s["shots"] for e in sh["events"] if e["kind"] == "dialogue"]
                 require(not set(declared) & set(used), "DIALOGUE_COVERAGE", scene["id"], "Dialogue repeated across Scenes")
                 require(set(declared) <= {d["id"] for d in beat["dialogues"]}, "DIALOGUE_SOURCE", scene["id"], "Unknown dialogue")
-                last = not any(o["beat_id"] == beat["id"] for o in outlines[outlines.index(outline) + 1:])
                 if last:
-                    require(set(declared) | set(used) >= {d["id"] for d in beat["dialogues"]}, "DIALOGUE_COVERAGE", scene["id"], "Missing authored dialogue")
+                    missing = [d["id"] for d in beat["dialogues"] if d["id"] not in set(declared) | set(used)]
+                    require(not missing, "DIALOGUE_COVERAGE", scene["id"],
+                            f"Missing authored dialogue IDs: {missing}. Emit each as a DIALOGUE event exactly once, "
+                            "preserving its authored id, dialogue_id, text, actor_id and language. "
+                            "Keep all required actions and camera work; do not replace speech with a summary or CAMERA.")
                 local_beat["dialogues"] = [d for d in beat["dialogues"] if d["id"] in declared]
                 local_doc = self._document(scenario, [local_scene], [e for e in required if e["id"] in scene["required_event_ids"]])
                 local_doc["beats"] = [local_beat]
@@ -68,10 +76,67 @@ class StoryTimelinePlanner:
             # Keep every earlier dialogue assignment in this beat, plus required state
             # dependencies. Unrelated beats' detailed prose is optional context.
             previous_scenes = [s for s in scenes if s["beat_id"] == outline["beat_id"] or s["id"] in outline["depends_on"] or s is scenes[-1]]
-            payload = dict(scenario=scenario, enhanced=enhanced, outline=outline, previous_scenes=previous_scenes, locked_scene=None)
+            payload = dict(scenario=scenario, enhanced=enhanced, outline=outline, previous_scenes=previous_scenes,
+                           locked_scene=None, required_dialogue_ids=required_dialogue_ids)
             scene = self.runner.run("detail", outline["id"], payload, check)
             scenes.append(apply_scene_image_facts(scene, scenario, image_facts))
+            emit_progress("done", stage="detail", index=scene_index, total=len(outlines))
         return validate_story(self._document(scenario, scenes, required))
+
+    def _plan_outlines(self, scenario, enhanced):
+        required = [e for b in enhanced["beats"] for e in b["required_events"]]
+        outlines, windows = [], None
+        total = scenario["duration_ms"]
+        index = 0
+        while index < len(scenario["beats"]):
+            beat = scenario["beats"][index]
+            emit_progress("unit", stage="outline", index=index, total=len(scenario["beats"]), label=beat["id"])
+            window = windows[index] if windows else None
+
+            def check(result):
+                accepted = outlines[:]
+                for outline in result["scenes"]:
+                    require(outline["beat_id"] == beat["id"] and set(outline["actor_ids"]) == set(beat["actor_ids"]) and outline["background_id"] == beat["background_id"], "OUTLINE_BINDING", outline["id"], "Wrong beat, cast or background")
+                    require(set(outline.get("prop_ids", [])) == set(beat.get("prop_ids", [])),
+                            "PROP_BINDING", outline["id"], "Preserve the beat's available prop IDs")
+                    start = accepted[-1]["end_ms"] if accepted else 0
+                    limit = min(start + 15000, window["end_ms"]) if window else start + 15000
+                    require(outline["start_ms"] == start and start < outline["end_ms"] <= limit,
+                            "OUTLINE_TIMING", outline["id"],
+                            f"Sceneの時間配置が不正です。必要な開始: {start}ms、終了の許容範囲: ({start}, {limit}]ms。"
+                            f"実際: {outline['start_ms']}..{outline['end_ms']}ms"
+                            f"（長さ{outline['end_ms'] - outline['start_ms']}ms、上限15000ms）。"
+                            "合計尺を変えず、空白・重複のない15秒以内のSceneへ分割してください。")
+                    require(outline["id"] not in {s["id"] for s in accepted} and set(outline["depends_on"]) <= {s["id"] for s in accepted}, "OUTLINE_DEPENDENCY", outline["id"], "Duplicate or forward dependency")
+                    validate_scene_transition(outline, accepted[-1] if accepted else None, beat,
+                                              code="OUTLINE_TRANSITION", require_state_coverage=True)
+                    accepted.append(outline)
+                expected = [e["id"] for e in required if e["beat_id"] == beat["id"]]
+                validate_required_coverage(result["scenes"], expected, beat["id"])
+                end = window["end_ms"] if window else total if index == len(scenario["beats"]) - 1 else None
+                if end is not None:
+                    require(accepted[-1]["end_ms"] == end, "OUTLINE_DURATION", beat["id"],
+                            f"Outline for this beat must end at {end}ms; received {accepted[-1]['end_ms']}ms "
+                            f"(difference {end - accepted[-1]['end_ms']}ms). "
+                            "Replan this beat with enough contiguous Scenes of at most 15000ms each. "
+                            "Preserve required events; do not add dialogue or new story events to fill time.")
+
+            payload = dict(scenario=scenario, enhanced=enhanced, accepted_outlines=outlines[:])
+            if windows:
+                payload["beat_windows"] = windows
+            result = self.runner.run("outline", beat["id"], payload, check)
+            outlines.extend(result["scenes"])
+            remaining_beats = len(scenario["beats"]) - index - 1
+            if windows is None and total is not None and remaining_beats and total - outlines[-1]["end_ms"] < remaining_beats:
+                # No detail exists yet: discard the invalid allocation, then
+                # replan all beats under a validated global budget exactly once.
+                windows = allocate_beat_windows(self.runner, scenario, enhanced, outlines)
+                emit_progress("restart", label="時間配分を再構成中")
+                outlines, index = [], 0
+                continue
+            emit_progress("done", stage="outline", index=index, total=len(scenario["beats"]))
+            index += 1
+        return outlines
 
     @staticmethod
     def _document(scenario, scenes, required):

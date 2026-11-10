@@ -3,4 +3,5 @@ project_idはscenario.project_id、scenario_sha256はscenario.source_sha256を�
 constraintsはscenario.constraintsをそのままコピーします。beatsはscenario.beatsと同じID・同じ順序で各一項です。
 slot=1は作品全体を指します。一つ目のbeatだけで終了せず、入力の全beatを一つのbeats配列へ出力します。beatの省略・追加・統合・並べ替えは禁止です。
 各required_eventsは原文に存在する出来事とし、beat_idと原文のsource行範囲を保持します。演出のための動作を必須出来事として追加しません。
-required_eventsのIDは文書内で一意な英小文字・数字・_を使います。先頭は英小文字です。
+required_eventsのIDはreq_で始め、展開IDと出来事を識別できる英小文字・数字・_を続けます。例: req_pencil_write。全展開を通して一意にし、作者のbeat・constraint・人物・背景・台詞のIDを再使用しません。
+台詞を必須出来事として抽出する場合も、台詞IDとは別のreq_ IDを割り当てます。作者の台詞ID・本文・話者・言語は書き換えません。必須出来事IDと台詞IDは異なる役割です。

@@ -7,6 +7,10 @@
 3. 「言語生成へ切替」で保存し、`Load`に作品名または作品ディレクトリを指定します。
 4. H3モデル・`runtime_root`を確認し、「動画生成へ切替」で保存JSONから生成します。
 
+動画・中間生成物はEMDの`# 作品`→`* id:`をフォルダ名として、`output/h3_chains/<作品id>/`へ保存します。最終動画はその中の`final/`です。`Load.project_name`（追加した4番目の出力）をProduction Planの`run_name`へ接続済みなので、作品を切り替えると保存先も追従します。固定の`vc_director_scenario_demo`は使用しません。言語側の保存revisionは引き続き`output/vc_director/<作品id>/`です。
+
+既存WFはComfyUI再起動・ブラウザ再読み込み後に読み込み直してください。LoadがProduction Planへ接続され、Run nameが旧配布値`vc_director_scenario_demo`のままなら、プロジェクト名の接続を自動追加します。独自のRun nameや既存の別接続は保持します。手動で切り替える場合は`Load.project_name`からProduction Planの`run_name`へ接続してください。表示中のRun nameとOutputボタンの参照先は、Load実行時に実際の作品idへ同期します。保存先の変更は次回生成から適用され、以前の出力フォルダを移動・削除しません。
+
 初期値は`assets/emd/minimal.scenario.emd`の内容、`scenario`、既定のGemma4モデル、作品名`scenario_demo`です。実行前に`model_name`でインストール済みGGUFを確認してください。両方停止はMute、両方有効は競合エラーです。ComfyUI画面でのQueue・GPU生成は引き続き受入検証の対象です。
 
 レビューゲート（`Review Candidates`）は既定で`enabled=false`です。生成後の承認待ちを挟まず、次のScene・連結へ進みます。レビューする場合はこのノードの`enabled`を有効にしてください。切替ボタンで動画生成側を有効にしても、この設定は維持します。
@@ -40,7 +44,7 @@ python tools/verify_context_loop.py --context-loop-root PATH/TO/ComfyUI-MiniMaxH
 
 音声は作品又は展開の`* 音声接続: continue`で、映像の`* 接続: cut`と独立して直前の生成音声をGuide22として引き継げます。`音声接続: cut`は映像がcontinueでも音声を引き継ぎません。省略／autoは従来動作です。これは波形コピーではなく条件付けであり、音楽・声質の完全一致は保証しません。[入力例](../assets/emd/audio-control.scenario.emd)を参照してください。
 
-H3専用NegPiPを試す場合は、EMDへ`* BGM: なし`と`* BGM抑制: negpip`を指定し、言語生成から新revisionを保存してください。更新WFの`VC · Audio Control`の`value_strength`で強度を変更します。既定は1で、BGM抑制を省略したPlanには適用しません。[外部ノード](https://github.com/hako-mikan/comfyui-minimax-h3-negpip)の導入とComfyUI再起動が必要です。この環境には固定版を導入済みです。新しい[VC Director.json](VC%20Director.json)を読み込んでください。開いている旧WFへノードは自動追加されません。配布WFは37ノード・68リンクです。[比較結果](../docs/implementation/negpip-audio-validation.md)では強度3でもBGM判定が残っています。
+H3専用NegPiPを試す場合は、EMDへ`* BGM: なし`と`* BGM抑制: negpip`を指定し、言語生成から新revisionを保存してください。更新WFの`VC · Audio Control`の`value_strength`で強度を変更します。既定は1で、BGM抑制を省略したPlanには適用しません。[外部ノード](https://github.com/hako-mikan/comfyui-minimax-h3-negpip)の導入とComfyUI再起動が必要です。この環境には固定版を導入済みです。新しい[VC Director.json](VC%20Director.json)を読み込んでください。開いている旧WFへノードは自動追加されません。配布WFは37ノード・69リンクです。[比較結果](../docs/implementation/negpip-audio-validation.md)では強度3でもBGM判定が残っています。
 
 展開ごとの接続は、シナリオの`## 展開 ID`に`* 接続: continue`を記述します。同じ背景ID・出演者集合の直前Sceneから引き継ぎます。作品先頭だけはcutです。`cut`は当該展開の全Sceneをcut、`auto`又は省略はGemma4が判断します。`* 方針:`も展開内で指定でき、その展開の演出だけに適用します。[入力例](../assets/emd/continued.scenario.emd)と[仕様](../docs/spec/simple-emd.md)を参照してください。変更後は言語生成から新revisionを作成します。
 

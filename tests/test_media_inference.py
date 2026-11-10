@@ -38,7 +38,7 @@ class InferenceTests(unittest.TestCase):
             def complete(messages, config, **kwargs):
                 self.assertNotIn("ただいま", str(messages))
                 state["chats"] += 1
-                return "TRANSLATION\t1\t__MVD_KEEP_0001__ walks."
+                return 'TRANSLATION\t1\t{"prefix":"","slots":[{"slot":1,"position":1,"after":" walks."}]}'
 
             backend.lifecycle = types.SimpleNamespace(ensure_loaded=lambda *args: None, count_serialized_prompt=lambda value: types.SimpleNamespace(count=100, estimated=False),
                                                      effective_n_ctx=16384, clear=lambda: state.update(clears=state["clears"] + 1), complete_chat=complete)

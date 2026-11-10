@@ -110,6 +110,7 @@ class RuntimeTests(unittest.TestCase):
         doc["actors"].append(other)
         doc["beats"][0]["actor_ids"] = ["friend", "hero"]
         doc["scenes"][0]["actor_ids"] = ["friend", "hero"]
+        doc["scenes"][0]["summary"] = "@friend stands beside @hero."
         doc["scenes"][0]["subject_descriptions"].append(dict(actor_id="friend", text="A friend."))
         doc["scenes"][0]["retention"].append(dict(actor_id="friend", mode="fully_preserved"))
         result = compile_fixture(doc)

@@ -10,6 +10,7 @@ import sys
 from typing import Any, Callable, Iterable
 
 from ..inference import InferenceBackendError, LlamaRuntimeConfig
+from ..utilities.progress import emit_progress
 
 from .model_discovery import VisionModelPair
 
@@ -117,6 +118,7 @@ class LlamaCppVisionLifecycle:
             raise InferenceBackendError("Vision model pair cannot be read") from exc
         if self._model is not None and signature == self._signature:
             return self._model
+        emit_progress("model", loading=True)
         module, llama_class, handler_class = self._dependencies()
         kv_names = {
             "q8_0": "GGML_TYPE_Q8_0",
@@ -154,6 +156,7 @@ class LlamaCppVisionLifecycle:
         self._handler = handler
         self._model = model
         self._signature = signature
+        emit_progress("model", loading=False)
         return model
 
     @staticmethod
@@ -202,6 +205,8 @@ class LlamaCppVisionLifecycle:
                 if not isinstance(content, str):
                     raise InferenceBackendError("invalid Vision stream content")
                 parts.append(content)
+                if content:
+                    emit_progress("activity")
         result = "".join(parts)
         if not result.strip():
             raise InferenceBackendError("Vision model returned an empty response")

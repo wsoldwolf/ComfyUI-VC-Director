@@ -25,6 +25,52 @@ class FakeNegPiP:
 
 
 class AudioControlTests(unittest.TestCase):
+    def test_v4_resolves_permission_only_silence_and_keeps_v3_replay(self):
+        from vc_director.core.compiler.api import compile_document, COMPACT_PROMPT_POLICY, RESOLVED_AUDIO_PROMPT_POLICY
+        from vc_director.core.audio.prompt import narrow_silent_direction
+        doc = english_document()
+        doc["beats"][0]["dialogues"] = []
+        doc["scenes"][0]["shots"][0]["events"].pop()
+        for policy in (doc["audio"], doc["beats"][0]["audio"], doc["scenes"][0]["audio"]):
+            policy.update(vocal="none", ambience="expand", effects="expand")
+        direction = "Only the voice of @hero is heard. Keep the face off screen and film the bench."
+        doc["beats"][0]["direction"] = [direction]
+        current = compile_document(doc, render_scene(doc), prompt_policy=RESOLVED_AUDIO_PROMPT_POLICY)
+        prompt = current.plan["shots"][0]["prompt"]
+        self.assertIn("overall_soundscape:\nComplete silence.", prompt)
+        self.assertNotIn("Only the voice", prompt)
+        self.assertIn("Keep the face off screen and film the bench.", prompt)
+        self.assertEqual(current.document, doc)
+        self.assertEqual(current.metadata["diagnostics"][0]["code"], "AUDIO_DIRECTION_NARROWED")
+        old = compile_document(doc, render_scene(doc), prompt_policy=COMPACT_PROMPT_POLICY)
+        self.assertIn("Only the voice", old.plan["shots"][0]["prompt"])
+        self.assertNotIn("Complete silence.", old.plan["shots"][0]["prompt"])
+        with temporary_directory() as directory:
+            revision = save(old, directory)
+            self.assertEqual(load(revision.parents[1]).plan, old.plan)
+        self.assertEqual(narrow_silent_direction("@heroは電話越しの声のみ。姿を映さずベンチを撮る。"),
+                         "姿を映さずベンチを撮る。")
+
+    def test_v4_retains_dialogue_and_timed_effects(self):
+        from vc_director.core.audio.prompt import scene_soundscape
+        doc = english_document()
+        scene = doc["scenes"][0]
+        scene["audio"]["effects"] = "expand"
+        scene["sound_events"] = [dict(id="phone_end", kind="effect", start_ms=0, end_ms=500,
+            trigger_event_id=scene["shots"][0]["events"][0]["id"], text="A short telephone disconnect tone.")]
+        doc["beats"][0]["audio"]["effects"] = "expand"
+        result = compile_fixture(doc)
+        prompt = result.plan["shots"][0]["prompt"]
+        self.assertIn("[00:00.000 --> 00:00.500] EFFECT: A short telephone disconnect tone.", prompt)
+        self.assertIn("Silence outside the specified dialogue and sound intervals.", prompt)
+        self.assertIn(dialogue(doc["beats"][0]["dialogues"][0]["text"])[0], prompt)
+        silent = copy.deepcopy(scene)
+        silent["shots"][0]["events"].pop()
+        silent["audio"]["vocal"] = "none"
+        self.assertIn("Silence outside the specified sound intervals.", scene_soundscape(silent, []))
+        silent["audio"].update(ambience="explicit", ambience_description="Continuous wind.")
+        self.assertNotIn("Silence outside", scene_soundscape(silent, []))
+
     def test_controls_inherit_and_roundtrip_without_changing_legacy_defaults(self):
         text = (ROOT / "assets/emd/minimal.scenario.emd").read_text(encoding="utf-8")
         legacy = parse(text)

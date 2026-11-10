@@ -94,7 +94,7 @@
       "source_sha256": "85b27218c45a5a18c3d1cd9e7263981886d497dd83f9233f7e0e3b89482a5fd6",
       "target": "core/compiler/protection.py",
       "status": "integrated",
-      "integrated_sha256": "80ebdaaff59c3943eecb021e01914dd3e62fd074998d83e9d68b547bb4501d9a"
+      "integrated_sha256": "7c3bc2f5b2ca21bcb6d9a9b43485351729f16c081a764d618f17eb088570f185"
     },
     {
       "source": "core/compiler/ref2va.py",
@@ -115,8 +115,8 @@
       "source_sha256": "8b3a09c2af59eda8b12488352c82b644b03f42b49a4f0f60873b25a5b433e9eb",
       "target": "core/compiler/whole_field.py",
       "status": "adapted",
-      "integrated_sha256": "7a85b53ba77f916914ad5e06b39b6478520137cb73dcdfad8965ab0ec2f9dd8e",
-      "note": "Integrated whole-field translation with optional semantic-validation callback inside the existing two-attempt repair loop and request diagnostics; source hash retained."
+      "integrated_sha256": "742ab1138f8c2c55862b831dd5b3fa3cd8afe36759cdddd8520d580043b2ecb6",
+      "note": "Adapted whole-field translation with optional typed occurrence-slot output, native grammar and per-attempt repair grammar factory, semantic validation and diagnostics inside the existing two-attempt repair loop; source hash retained."
     },
     {
       "source": "core/emd/__init__.py",
@@ -263,7 +263,7 @@
       "source_sha256": "5d13ee1f7f0422fa3019227e4ee72dbb90c6cdbe68c026fa19dffc0fc17d0e78",
       "target": "core/inference/llama_cpp_backend.py",
       "status": "integrated",
-      "integrated_sha256": "e591f62b7b4672ca31cd444777fa8656ea07af016da5999eb487fb9ccfdc6d3a"
+      "integrated_sha256": "8d4745d76683723b731e0d43b8b4e0e9dfa83a049ae1e529c586d310eff6bd17"
     },
     {
       "source": "core/inference/runtime.py",
@@ -333,7 +333,7 @@
       "source_sha256": "2ffcf15fa23a155e19eef65d4d59832eb360dcfa63a4beaa57c3975285e3748a",
       "target": "core/vision/llama_cpp_vision.py",
       "status": "integrated",
-      "integrated_sha256": "cf7f933034df5cea1e9bccf8ddf05e7608f1160a5ca57b06fd7e04111f6cbf85"
+      "integrated_sha256": "bfec27d165bda3e81a08296340c3e43572dae70a282b9b2744038a85c46994a6"
     },
     {
       "source": "core/vision/model_discovery.py",

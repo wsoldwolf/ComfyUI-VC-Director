@@ -2,7 +2,7 @@
   "id": "f97af838-5222-5864-8ec8-15d657333fdb",
   "revision": 0,
   "last_node_id": 44,
-  "last_link_id": 76,
+  "last_link_id": 77,
   "nodes": [
     {
       "id": 1,
@@ -113,7 +113,7 @@
           "name": "model",
           "type": "MODEL",
           "links": [
-            67
+            68
           ]
         }
       ],
@@ -172,7 +172,7 @@
           "name": "CLIP",
           "type": "CLIP",
           "links": [
-            74
+            75
           ]
         }
       ],
@@ -394,7 +394,7 @@
           "name": "clip_index",
           "type": "INT",
           "links": [
-            66
+            67
           ]
         },
         {
@@ -592,7 +592,7 @@
         {
           "name": "compiled",
           "type": "VC_COMPILED",
-          "link": 65
+          "link": 66
         },
         {
           "name": "registry",
@@ -602,7 +602,7 @@
         {
           "name": "clip_index",
           "type": "INT",
-          "link": 66,
+          "link": 67,
           "widget": {
             "name": "clip_index"
           }
@@ -759,7 +759,7 @@
         {
           "name": "model",
           "type": "MODEL",
-          "link": 72
+          "link": 73
         }
       ],
       "outputs": [
@@ -767,7 +767,7 @@
           "name": "MODEL",
           "type": "MODEL",
           "links": [
-            73
+            74
           ]
         }
       ],
@@ -1244,7 +1244,7 @@
           "localized_name": "model",
           "name": "model",
           "type": "MODEL",
-          "link": 68
+          "link": 69
         },
         {
           "localized_name": "attention",
@@ -1262,7 +1262,7 @@
           "name": "model",
           "type": "MODEL",
           "links": [
-            69
+            70
           ]
         }
       ],
@@ -1416,9 +1416,17 @@
           }
         },
         {
+          "name": "run_name",
+          "type": "STRING",
+          "link": 64,
+          "widget": {
+            "name": "run_name"
+          }
+        },
+        {
           "name": "generation_fingerprint",
           "type": "STRING",
-          "link": 76,
+          "link": 77,
           "widget": {
             "name": "generation_fingerprint"
           }
@@ -1465,7 +1473,7 @@
       },
       "widgets_values": [
         "{\"shots\": [{\"id\": \"load_preview\", \"length\": 243, \"prompt\": \"Load supplies the compiled scene at execution.\", \"context_length\": 0, \"audio_context_length\": 0}]}",
-        "vc_director_scenario_demo",
+        "scenario_demo",
         "",
         864,
         480,
@@ -1878,14 +1886,21 @@
           "name": "compiled",
           "type": "VC_COMPILED",
           "links": [
-            65,
-            75
+            66,
+            76
           ]
         },
         {
           "name": "generation_fingerprint",
           "type": "STRING",
           "links": []
+        },
+        {
+          "name": "project_name",
+          "type": "STRING",
+          "links": [
+            64
+          ]
         }
       ],
       "properties": {
@@ -2281,7 +2296,7 @@
           "localized_name": "モデル",
           "name": "model",
           "type": "MODEL",
-          "link": 67
+          "link": 68
         },
         {
           "localized_name": "lora_name",
@@ -2308,7 +2323,7 @@
           "name": "MODEL",
           "type": "MODEL",
           "links": [
-            68
+            69
           ]
         }
       ],
@@ -2356,7 +2371,7 @@
           "localized_name": "model",
           "name": "model",
           "type": "MODEL",
-          "link": 69
+          "link": 70
         },
         {
           "localized_name": "selection",
@@ -2446,7 +2461,7 @@
           "name": "model",
           "type": "MODEL",
           "links": [
-            70
+            71
           ]
         }
       ],
@@ -2504,7 +2519,7 @@
           "localized_name": "model",
           "name": "model",
           "type": "MODEL",
-          "link": 70
+          "link": 71
         },
         {
           "localized_name": "enabled",
@@ -2763,7 +2778,7 @@
           "name": "model",
           "type": "MODEL",
           "links": [
-            71
+            72
           ]
         }
       ],
@@ -2855,7 +2870,7 @@
           "localized_name": "model",
           "name": "model",
           "type": "MODEL",
-          "link": 71
+          "link": 72
         },
         {
           "localized_name": "enable_fp16_accumulation",
@@ -2873,7 +2888,7 @@
           "name": "MODEL",
           "type": "MODEL",
           "links": [
-            72
+            73
           ]
         }
       ],
@@ -2914,17 +2929,17 @@
         {
           "name": "model",
           "type": "MODEL",
-          "link": 73
+          "link": 74
         },
         {
           "name": "clip",
           "type": "CLIP",
-          "link": 74
+          "link": 75
         },
         {
           "name": "compiled",
           "type": "VC_COMPILED",
-          "link": 75
+          "link": 76
         },
         {
           "name": "value_strength",
@@ -2963,7 +2978,7 @@
           "name": "generation_fingerprint",
           "type": "STRING",
           "links": [
-            76
+            77
           ]
         }
       ],
@@ -3427,7 +3442,15 @@
       "STRING"
     ],
     [
-      65,
+      64,
+      34,
+      3,
+      24,
+      6,
+      "STRING"
+    ],
+    [
+      66,
       34,
       1,
       11,
@@ -3435,7 +3458,7 @@
       "VC_COMPILED"
     ],
     [
-      66,
+      67,
       8,
       1,
       11,
@@ -3443,7 +3466,7 @@
       "INT"
     ],
     [
-      67,
+      68,
       1,
       0,
       39,
@@ -3451,7 +3474,7 @@
       "MODEL"
     ],
     [
-      68,
+      69,
       39,
       0,
       22,
@@ -3459,7 +3482,7 @@
       "MODEL"
     ],
     [
-      69,
+      70,
       22,
       0,
       40,
@@ -3467,7 +3490,7 @@
       "MODEL"
     ],
     [
-      70,
+      71,
       40,
       0,
       41,
@@ -3475,7 +3498,7 @@
       "MODEL"
     ],
     [
-      71,
+      72,
       41,
       0,
       42,
@@ -3483,7 +3506,7 @@
       "MODEL"
     ],
     [
-      72,
+      73,
       42,
       0,
       13,
@@ -3491,7 +3514,7 @@
       "MODEL"
     ],
     [
-      73,
+      74,
       13,
       0,
       44,
@@ -3499,7 +3522,7 @@
       "MODEL"
     ],
     [
-      74,
+      75,
       2,
       0,
       44,
@@ -3507,7 +3530,7 @@
       "CLIP"
     ],
     [
-      75,
+      76,
       34,
       1,
       44,
@@ -3515,11 +3538,11 @@
       "VC_COMPILED"
     ],
     [
-      76,
+      77,
       44,
       2,
       24,
-      6,
+      7,
       "STRING"
     ]
   ],

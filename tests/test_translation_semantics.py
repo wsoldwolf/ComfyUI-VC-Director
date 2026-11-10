@@ -1,5 +1,6 @@
 import copy
 import json
+import re
 import types
 import unittest
 from pathlib import Path
@@ -15,6 +16,16 @@ from vc_director.core.utilities import canonical
 
 
 class TranslationSemanticsTests(unittest.TestCase):
+    def test_narration_prohibition_is_not_a_vocal_request(self):
+        for text in ("静かな短編映画。人物の表情は日常的に保ち、説明的なナレーションを加えない。",
+                     "ナレーションを一切追加しない。", "台詞を入れない。"):
+            _prose(text, "direction/0", [], cues=True)
+        for text in ("説明的なナレーションを加える。", "ナレーションを加えないが小さく呟く。",
+                     "ナレーションを加えない。主人公が呟く。", "台詞を追加しないが主人公が話す。"):
+            with self.assertRaises(VCError) as caught:
+                _prose(text, "direction/0", [], cues=True)
+            self.assertEqual(caught.exception.diagnostic.code, "VOCAL_CUE")
+
     @staticmethod
     def backend(directory, responses):
         path = Path(directory) / "test.gguf"
@@ -24,13 +35,48 @@ class TranslationSemanticsTests(unittest.TestCase):
         replies = iter(responses)
         def complete(messages, config, **kwargs):
             state["requests"].append(copy.deepcopy(messages))
-            return next(replies)
+            state.setdefault("grammars", []).append(kwargs.get("grammar"))
+            response = next(replies)
+            request = json.loads(messages[1]["content"].removeprefix("/no_think\n"))
+            # Existing fixtures describe the English result. Emulate the new
+            # native slot transport without changing their semantics or errors.
+            if request.get("output_format") == "occurrence-slots-v1" and response.startswith("TRANSLATION\t1\t"):
+                text = response.removeprefix("TRANSLATION\t1\t")
+                if not text.startswith("{") and "\n" not in text:
+                    matches = list(re.finditer(r"__MVD_KEEP_([0-9]+)__", text))
+                    slots = [dict(slot=int(match[1]), position=i + 1,
+                                  after=text[match.end():matches[i + 1].start() if i + 1 < len(matches) else len(text)])
+                             for i, match in enumerate(matches)]
+                    value = dict(prefix=text[:matches[0].start()] if matches else text,
+                                 slots=sorted(slots, key=lambda s: s["slot"]))
+                    response = "TRANSLATION\t1\t" + json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+            return response
         backend.lifecycle = types.SimpleNamespace(
             ensure_loaded=lambda *args: state.update(loads=state["loads"] + 1),
             count_serialized_prompt=lambda text: types.SimpleNamespace(count=100, estimated=False),
             effective_n_ctx=24576, complete_chat=complete,
             clear=lambda: state.update(clears=state["clears"] + 1))
         return backend, state
+
+    def test_multiline_source_uses_single_line_translation_grammar(self):
+        from vc_director.core.inference.translator import TRANSLATION_GRAMMAR
+        from llama_cpp import LlamaGrammar
+        LlamaGrammar.from_string(TRANSLATION_GRAMMAR, verbose=False)
+        with temporary_directory() as directory:
+            backend, state = self.backend(directory, ["TRANSLATION\t1\tShe wears a jacket. She holds a bag."])
+            result = GemmaTranslator(backend)("上着を着ている。\n鞄を持っている。")
+            self.assertEqual(result, "She wears a jacket. She holds a bag.")
+            self.assertEqual(state["grammars"], [TRANSLATION_GRAMMAR])
+            self.assertIn("one physical output line", state["requests"][0][0]["content"])
+
+    def test_multiline_response_is_repaired_without_truncating(self):
+        with temporary_directory() as directory:
+            backend, state = self.backend(directory, [
+                "TRANSLATION\t1\tShe wears a jacket.\nShe holds a bag.",
+                "TRANSLATION\t1\tShe wears a jacket. She holds a bag."])
+            result = GemmaTranslator(backend)("上着を着ている。\n鞄を持っている。")
+            self.assertEqual(result, "She wears a jacket. She holds a bag.")
+            self.assertEqual(len(state["requests"]), 2)
 
     def test_japanese_vocal_description_is_checked_before_translation(self):
         for text in ("主人公が帰宅の言葉を口にし、帽子を脱ぐ。", "挨拶を口にする。", "主人公が話し、声を出す。"):
@@ -69,7 +115,8 @@ class TranslationSemanticsTests(unittest.TestCase):
             self.assertEqual(len(state["requests"]), 2)
             repair = json.loads(state["requests"][1][1]["content"].removeprefix("/no_think\n"))
             self.assertIn("VOCAL_CUE", repair["retry_reason"])
-            self.assertIn("whispers", repair["repair_context"]["previous_translation"])
+            self.assertIn("whispers", repair["repair_context"]["previous_response"])
+            self.assertEqual(repair["repair_context"]["expected_slot_ids"], [1])
             self.assertEqual(repair["japanese_text"], "__MVD_KEEP_0001__が振り返る。")
             diagnostic = json.loads(next((Path(directory) / "cache/diagnostics").glob("*.json")).read_text(encoding="utf-8"))
             self.assertEqual(diagnostic["status"], "success")

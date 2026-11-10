@@ -4,6 +4,7 @@ from ..artifacts.assets import path_for
 from ..artifacts.schema import validate
 from ..artifacts.storage import verify_assets
 from ..errors import require
+from ..utilities.progress import emit_progress
 
 
 def apply_image_facts(scenario, facts=()):
@@ -43,7 +44,15 @@ def apply_scene_image_facts(scene, scenario, facts=()):
     for description in result["subject_descriptions"]:
         actor_id = description["actor_id"]
         if actor_id in observed:
-            appearance, local = actors[actor_id]["description"], description["text"]
+            if "visible_actor_ids" in scene:
+                if actor_id not in scene["visible_actor_ids"]:
+                    continue
+                # Do not re-inject author role/voice prose after the LLM has
+                # separated it. Only the actual observed visual facts belong here.
+                appearance = "\n".join(f["text"] for f in facts if f["entity_kind"] == "actor" and f["entity_id"] == actor_id)
+            else:
+                appearance = actors[actor_id]["description"]
+            local = description["text"]
             if appearance not in local:
                 description["text"] = appearance if local in appearance else appearance + "\n" + local
     return result
@@ -71,7 +80,10 @@ def scenario_image_facts(scenario, registry, pair, cache_root, manual=(), *, obs
         validate(fact, "image_fact")
         require((fact["entity_kind"], fact["entity_id"]) in known, "IMAGE_FACT", fact["entity_id"], "Unknown entity")
     manual_keys = {(fact["entity_kind"], fact["entity_id"]) for fact in facts}
-    for kind, entity in entities:
+    jobs = [(kind, entity) for kind, entity in entities
+            if entity.get("image_asset_id") and (kind, entity["id"]) not in manual_keys]
+    for index, (kind, entity) in enumerate(jobs):
+        emit_progress("unit", stage="vision", index=index, total=len(jobs), label=entity["id"])
         asset_id = entity.get("image_asset_id")
         # Explicit manual descriptions take precedence for that entity.
         if not asset_id or (kind, entity["id"]) in manual_keys:
@@ -93,4 +105,6 @@ def scenario_image_facts(scenario, registry, pair, cache_root, manual=(), *, obs
         fact = dict(entity_kind=kind, entity_id=entity["id"], text=text)
         validate(fact, "image_fact")
         facts.append(fact)
+        emit_progress("done", stage="vision", index=index, total=len(jobs))
+    emit_progress("stage_done", stage="vision", total=len(jobs))
     return facts

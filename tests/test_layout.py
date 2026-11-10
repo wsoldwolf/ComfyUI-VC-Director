@@ -80,6 +80,13 @@ print("ComfyUI package import: OK")
         # A connected external plan does not exempt the local editor from validation.
         self.assertTrue(json.loads(production["widgets_values"][0])["shots"])
         self.assertIsNotNone(next(i for i in production["inputs"] if i["name"] == "plan_json_input")["link"])
+        run = next(i for i in production["inputs"] if i["name"] == "run_name")
+        wire = next(l for l in workflow["links"] if l[0] == run["link"])
+        origin = next(n for n in workflow["nodes"] if n["id"] == wire[1])
+        self.assertEqual(origin["type"], "VCDirectorLoad")
+        self.assertEqual(origin["outputs"][wire[2]]["name"], "project_name")
+        self.assertEqual(wire[2], 3)  # Existing output indices stay in place.
+        self.assertEqual(production["widgets_values"][1], "scenario_demo")
         for name in ("width", "height", "base_seed"):
             socket = next(i for i in production["inputs"] if i["name"] == name)
             self.assertEqual(socket["type"], "INT")

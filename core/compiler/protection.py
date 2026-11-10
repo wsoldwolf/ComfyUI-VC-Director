@@ -31,7 +31,7 @@ _RENDERER_DIRECTIVE_MAP = {
 _CONCEPT_RE = re.compile(r"`(サブジェクト[1-4])`")
 _MEDIA_RE = re.compile(r"`(画像([1-9])|動画([1-3])|音声([1-3]))`")
 _REFERENCE_RE = re.compile(
-    r"<(?:Subject [1-4]|Picture [1-9]|Video [1-3]|Audio [1-3])>"
+    r"<(?:Subject [1-9][0-9]*|Picture [1-9]|Video [1-3]|Audio [1-3])>"
 )
 _D_SPAN_RE = re.compile(r"<d(?:\[[^\]\r\n]+\])?>.*?</d>")
 _DIALOGUE_RE = re.compile(r"「([^「」]*)」")

@@ -1,11 +1,18 @@
 """Generated-audio Guide carry, independent of visual cuts when authored."""
 from ..errors import require
+from .nonverbal import permits_dialogue, permits_nonverbal
 
 
 def context_frames(policy, previous, visual_context, bindings):
     if previous is None or policy.get("continuity", "auto") == "cut":
         return 0
     if policy.get("continuity", "auto") == "continue":
+        for permits in (permits_dialogue, permits_nonverbal):
+            require(not permits(previous["audio"]) or permits(policy), "AUDIO_CONTINUITY_PERMISSION", "vocal",
+                    "発声の許可を変更する区間は音声接続: cutで音を切り替えてください。")
+        if permits_nonverbal(previous["audio"]):
+            require(set(previous["audio"]["nonverbal"]["allowed"]) <= set(policy["nonverbal"]["allowed"]),
+                    "AUDIO_CONTINUITY_PERMISSION", "nonverbal", "許可する声を減らす区間は音声接続: cutにしてください。")
         for key in ("vocal", "bgm", "ambience", "effects"):
             require(previous["audio"][key] == "none" or policy[key] != "none", "AUDIO_CONTINUITY_PERMISSION", key,
                     "直前で許可した音をこのSceneで禁止しています。音声接続: cutで音を切り替えてください。")

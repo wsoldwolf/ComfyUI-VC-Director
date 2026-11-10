@@ -29,6 +29,7 @@ source_sha256とscene_emd_sha256はLF正規化したEMDのUTF-8 hash。Plan hash
 | SourceSpan | document:scenario/scene、first_line:int>=1、last_line:int>=first_line |
 | Actor | id、name、description:string、image_asset_id、video_asset_id、voice_asset_id:string/null |
 | Background | id、description:string、image_asset_id:string/null |
+| Prop（任意のprops配列） | id、name、description:string、image_asset_id:string/null、size:string/null、任意のreference_hint:string/null |
 | Constraint | id、text:string、source:SourceSpan |
 | AudioReference | asset_id:string、purpose:music/ambience/effects |
 | AudioPolicy | vocal:none/dialogue、bgm:none/generate、bgm_description:string/null、ambience:none/explicit/expand、ambience_description:string/null、effects:none/explicit/expand、effects_description:string/null、reference_audio:AudioReference[] |
@@ -72,6 +73,10 @@ Assetはid、kind:image/audio/video、sha256、locator、sample_rate:int/null、
 
 ReferenceBindingはasset_id、role:identity/background/motion/voice/music/ambience/effects/video_audio、token:native Picture/Video/Audio参照を持つ。
 
+小物参照はrole=propを使う。Beat／SceneOutline／Sceneの任意prop_idsは使用候補、Sceneの任意visible_prop_idsはその部分集合で、未指定の保存Sceneではprop_idsを表示対象とする。人物と小物は@IDを共有するため、両型を通してIDの重複を禁止する。小物をactor_idsやDIALOGUEへ入れず、非台詞eventとstateのowner_idには小物IDを許可する。小物の基本定義は作品のpropsへ保持し、LLMのsubject_descriptions／retentionは人物だけを扱う。
+
+画像参照はasset ID単位で番号を付けるため、同じ一枚の画像を複数小物が共有できる。各Subjectの定義へ同じPicture番号と個別reference_hintを記述し、参照画像内の位置を生成Scene内の配置として扱わない。寸法・形状の共通定義はCompilerで付加する。Segmentの任意local_propsにはprop_idとsubject_numberを保存する。人物のSubject番号は従来どおり先に割り当て、その後へ可視小物を割り当てる。小物追加によってSubjectが4を超える場合も参照保護・翻訳・実行metadataで保持し、画像入力は引き続き9枚以内へ検証する。
+
 Segmentはid、scene_id、index、planned_start_ms、planned_end_ms、start_frame、end_frame、raw_length、context_frames、audio_context_frames、local_subjects、reference_bindings、event_timing、audio、audio_outputを持つ。
 
 local_subjectsは{actor_id,subject_number:1〜4}[]。event_timingは{event_id,planned_start_ms,planned_end_ms,raw_start_frame,raw_end_frame,output_start_frame,output_end_frame}[]。原相対時刻とraw / 出力frameの両方を保存する。audio_outputはgenerated / silenceの生成指示分類であり、waveformのcopy操作ではない。
@@ -87,3 +92,5 @@ runtime_contractはcontract_id、context_loop_version、context_loop_commit、so
 EMDとartifactは意味を変えずに相互変換する。出典位置はシーンEMDの出典表へ保存する。実行frame補正はEMDの原時刻に書き戻さない。
 
 [JSON例](examples/artifacts/scenario.json)と各段階のrequest / response例をexamples/artifactsへ置く。素材locator・hash・compiler_versionは説明用であり、そのままGPU実行できる入力ではない。
+
+Sceneの任意field `visible_actor_ids: ID[]` はactor_idsの部分集合で重複不可。新規LLM詳細生成では必須とし、旧artifactの読込では省略可。人物描写・retentionは内部では参加者ごとの記録を維持するが、v6の最終prompt・参照素材は可視性と実際のDIALOGUEに基づき選別する。

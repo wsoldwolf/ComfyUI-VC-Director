@@ -204,7 +204,9 @@
         "vocal": {
           "enum": [
             "none",
-            "dialogue"
+            "dialogue",
+            "nonverbal",
+            "dialogue_nonverbal"
           ]
         },
         "bgm": {
@@ -279,6 +281,9 @@
             "prompt",
             "negpip"
           ]
+        },
+        "nonverbal": {
+          "$ref": "#/$defs/nonverbal_policy"
         }
       },
       "required": [
@@ -383,6 +388,15 @@
             "cut",
             "continue"
           ]
+        },
+        "prop_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "uniqueItems": true,
+          "minItems": 0
         }
       },
       "required": [
@@ -483,7 +497,8 @@
           "enum": [
             "action",
             "camera",
-            "dialogue"
+            "dialogue",
+            "vocal"
           ]
         },
         "start_ms": {
@@ -696,6 +711,15 @@
             "$ref": "#/$defs/state"
           },
           "minItems": 0
+        },
+        "prop_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "uniqueItems": true,
+          "minItems": 0
         }
       },
       "required": [
@@ -862,6 +886,39 @@
             "$ref": "#/$defs/sound_event"
           },
           "minItems": 0
+        },
+        "visual_directions": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "visible_actor_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "uniqueItems": true
+        },
+        "prop_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "uniqueItems": true,
+          "minItems": 0
+        },
+        "visible_prop_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "uniqueItems": true,
+          "minItems": 0
         }
       },
       "required": [
@@ -985,7 +1042,8 @@
             "music",
             "ambience",
             "effects",
-            "video_audio"
+            "video_audio",
+            "prop"
           ]
         },
         "token": {
@@ -1131,6 +1189,28 @@
             "generated",
             "silence"
           ]
+        },
+        "local_props": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "prop_id": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "subject_number": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "required": [
+              "prop_id",
+              "subject_number"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 0
         }
       },
       "required": [
@@ -1177,7 +1257,8 @@
             "music",
             "ambience",
             "effects",
-            "video_audio"
+            "video_audio",
+            "prop"
           ]
         }
       },
@@ -1299,6 +1380,22 @@
             "minLength": 1
           },
           "minItems": 0
+        },
+        "props": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/prop"
+          },
+          "minItems": 0
+        },
+        "vocal_patterns": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/nonverbal_policy"
+          }
         }
       },
       "required": [
@@ -1435,6 +1532,22 @@
             "$ref": "#/$defs/scene"
           },
           "minItems": 1
+        },
+        "props": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/prop"
+          },
+          "minItems": 0
+        },
+        "vocal_patterns": {
+          "type": "object",
+          "propertyNames": {
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "additionalProperties": {
+            "$ref": "#/$defs/nonverbal_policy"
+          }
         }
       },
       "required": [
@@ -1722,6 +1835,10 @@
                 "$ref": "#/$defs/image_fact"
               },
               "minItems": 0
+            },
+            "enhance_beat_id": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
             }
           },
           "required": [
@@ -1838,6 +1955,33 @@
                 "$ref": "#/$defs/scene_outline"
               },
               "minItems": 0
+            },
+            "beat_windows": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "properties": {
+                  "beat_id": {
+                    "type": "string",
+                    "pattern": "^[a-z][a-z0-9_]*$"
+                  },
+                  "start_ms": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "end_ms": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "beat_id",
+                  "start_ms",
+                  "end_ms"
+                ],
+                "additionalProperties": false
+              }
             }
           },
           "required": [
@@ -1981,6 +2125,15 @@
                   "type": "null"
                 }
               ]
+            },
+            "required_dialogue_ids": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "minItems": 0,
+              "uniqueItems": true
             }
           },
           "required": [
@@ -2284,6 +2437,124 @@
           }
         }
       ]
+    },
+    "prop": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "image_asset_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "size": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "reference_hint": {
+          "anyOf": [
+            {
+              "type": "string",
+              "minLength": 1
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "image_asset_id",
+        "size"
+      ],
+      "additionalProperties": false
+    },
+    "nonverbal_policy": {
+      "type": "object",
+      "properties": {
+        "allowed": {
+          "type": "array",
+          "items": {
+            "enum": [
+              "breath",
+              "pant",
+              "sigh",
+              "gasp",
+              "chuckle",
+              "laugh",
+              "effort",
+              "groan",
+              "sob",
+              "scream"
+            ]
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "frequency": {
+          "enum": [
+            "控えめ",
+            "動作に合わせる",
+            "多め"
+          ]
+        },
+        "intensity": {
+          "enum": [
+            "弱め",
+            "中程度",
+            "強め"
+          ]
+        },
+        "instruction": {
+          "type": "string"
+        },
+        "pattern": {
+          "anyOf": [
+            {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "allowed",
+        "frequency",
+        "intensity",
+        "instruction",
+        "pattern"
+      ],
+      "additionalProperties": false
     }
   }
 }

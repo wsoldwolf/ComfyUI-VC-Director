@@ -11,11 +11,15 @@ import importlib
 import inspect
 import logging
 import re
+import sys
+from time import perf_counter
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Iterable, Mapping
 
 from .runtime import LlamaRuntimeConfig
+from ..utilities.progress import emit_progress
+from .fast_grammar import install_fast_grammar, completion_profile
 
 
 _LOGGER = logging.getLogger("mv_director.inference")
@@ -26,6 +30,19 @@ _LEADING_THINK_BLOCK = re.compile(
 
 class InferenceBackendError(RuntimeError):
     pass
+
+
+def release_comfy_gpu_models(config):
+    """Hand the current ComfyUI GPU to GGUF; never import/start ComfyUI in CLI."""
+    manager = sys.modules.get("comfy.model_management")
+    if config.gpu_layers == 0 or manager is None:
+        return
+    device = manager.get_torch_device()
+    if getattr(device, "type", None) != "cuda":
+        return
+    _LOGGER.info("Releasing ComfyUI GPU models before loading GGUF on %s", device)
+    manager.free_memory(1e30, device)
+    manager.soft_empty_cache()
 
 
 @dataclass(frozen=True, slots=True)
@@ -57,6 +74,7 @@ class LlamaCppLifecycle:
         self._class = llama_class
         self._model: Any | None = None
         self._signature: tuple[Any, ...] | None = None
+        self.last_completion_metrics: dict[str, Any] = {}
 
     @property
     def loaded(self) -> bool:
@@ -107,9 +125,11 @@ class LlamaCppLifecycle:
         if self._model is not None and signature == self._signature:
             return self._model
 
+        emit_progress("model", loading=True)
         module, llama_class = self._dependencies()
         kv_type = self._kv_type(module, config.kv_cache_type)
         self.clear()
+        release_comfy_gpu_models(config)
         kwargs: dict[str, Any] = {
             "model_path": str(path.resolve(strict=True)),
             "n_ctx": config.n_ctx,
@@ -132,6 +152,8 @@ class LlamaCppLifecycle:
             raise
         self._model = model
         self._signature = signature
+        install_fast_grammar(model, module)
+        emit_progress("model", loading=False)
         return model
 
     def clear(self) -> None:
@@ -177,6 +199,8 @@ class LlamaCppLifecycle:
         interrupt_callback: Callable[[], Any] | None = None,
         grammar: str | None = None,
     ) -> str:
+        started = perf_counter()
+        self.last_completion_metrics = {}
         if self._model is None:
             raise InferenceBackendError("no GGUF model is loaded")
         if interrupt_callback is not None:
@@ -205,8 +229,10 @@ class LlamaCppLifecycle:
         if grammar is not None and "grammar" not in supported:
             raise InferenceBackendError("chat completion does not support grammar")
         try:
-            stream = completion(**supported)
-            return self._collect_chat_stream(stream, interrupt_callback)
+            self.last_completion_metrics["setup_seconds"] = perf_counter() - started
+            with completion_profile(self._model, self.last_completion_metrics):
+                stream = completion(**supported)
+                return self._collect_chat_stream(stream, interrupt_callback, self.last_completion_metrics)
         except InferenceBackendError:
             raise
         except BaseException:
@@ -214,8 +240,10 @@ class LlamaCppLifecycle:
 
     @staticmethod
     def _collect_chat_stream(
-        stream: Iterable[Any], interrupt_callback: Callable[[], Any] | None
+        stream: Iterable[Any], interrupt_callback: Callable[[], Any] | None,
+        metrics: dict[str, Any] | None = None,
     ) -> str:
+        started = perf_counter()
         parts: list[str] = []
         for chunk in stream:
             if interrupt_callback is not None:
@@ -230,6 +258,8 @@ class LlamaCppLifecycle:
             first = choices[0]
             if not isinstance(first, dict):
                 raise InferenceBackendError("llama.cpp stream choice is invalid")
+            if metrics is not None and isinstance(first.get("finish_reason"), str):
+                metrics["finish_reason"] = first["finish_reason"]
             delta = first.get("delta", {})
             if not isinstance(delta, dict):
                 raise InferenceBackendError("llama.cpp stream delta is invalid")
@@ -238,6 +268,12 @@ class LlamaCppLifecycle:
                 if not isinstance(content, str):
                     raise InferenceBackendError("llama.cpp stream content is invalid")
                 parts.append(content)
+                if content:
+                    emit_progress("activity")
+                if content and metrics is not None and "first_text_seconds" not in metrics:
+                    metrics["first_text_seconds"] = perf_counter() - started
+        if metrics is not None:
+            metrics["stream_seconds"] = perf_counter() - started
         result = "".join(parts)
         if not result.strip():
             raise InferenceBackendError("llama.cpp returned an empty response")

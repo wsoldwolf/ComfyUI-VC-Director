@@ -125,6 +125,43 @@ class BeatTransitionTests(unittest.TestCase):
         from llama_cpp import LlamaGrammar
         LlamaGrammar.from_string(grammar, verbose=False)
 
+    def test_final_outline_reserves_enough_scenes_for_remaining_duration(self):
+        scenario, enhanced, outlines, doc = continued_story()
+        scenario["duration_ms"] = 48000
+        accepted = copy.deepcopy(outlines[:2])
+        accepted[-1]["end_ms"] = 15000
+        payload = dict(scenario=scenario, enhanced=enhanced, accepted_outlines=accepted)
+        narrowed = generation_schema("outline", payload)
+        validator = Draft202012Validator(narrowed)
+        scenes = [dict(copy.deepcopy(outlines[2]), id=f"final_{i}", start_ms=start, end_ms=end)
+                  for i, (start, end) in enumerate(((15000, 26000), (26000, 37000), (37000, 48000)))]
+        self.assertTrue(validator.is_valid(dict(scenes=scenes)))
+        self.assertFalse(validator.is_valid(dict(scenes=scenes[:2])))
+        prompt = system_prompt("outline", payload)
+        self.assertIn("残りは33000ms", prompt)
+        self.assertIn("最低3Scene", prompt)
+        self.assertIn("最後のend_msを必ず48000", prompt)
+        if importlib.util.find_spec("llama_cpp"):
+            from llama_cpp import LlamaGrammar
+            grammar = record_grammar("SCENES", payload_schema=narrowed)
+            self.assertIn("scenes-prefix-2", grammar)
+            LlamaGrammar.from_string(grammar, verbose=False)
+
+    def test_auto_boundary_forces_cut_when_cast_or_background_changes(self):
+        for field, value in (("actor_ids", []), ("background_id", "other_room")):
+            scenario, enhanced, outlines, doc = continued_story()
+            scenario["beats"][1].update(transition="auto", **{field: value})
+            payload = dict(scenario=scenario, enhanced=enhanced, accepted_outlines=outlines[:2])
+            schema = generation_schema("outline", payload)
+            validator = Draft202012Validator(schema)
+            first = dict(outlines[2], transition="cut", **{field: value})
+            self.assertTrue(validator.is_valid(dict(scenes=[first])))
+            self.assertFalse(validator.is_valid(dict(scenes=[dict(first, transition="continue")])))
+            # The restriction applies to the boundary, not later same-cast Scenes.
+            later = dict(first, id="scene_later", transition="continue", depends_on=[first["id"]])
+            self.assertTrue(validator.is_valid(dict(scenes=[first, later])))
+            self.assertIn("必ずtransition=cut", system_prompt("outline", payload))
+
     def test_planner_repairs_policy_and_state_before_detail_then_saves_guide_plan(self):
         scenario, enhanced, outlines, doc = continued_story()
         bad_cut = copy.deepcopy(outlines[:2])

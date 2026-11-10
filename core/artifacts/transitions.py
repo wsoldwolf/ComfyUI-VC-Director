@@ -14,7 +14,12 @@ def validate_beat_transitions(beats):
         previous = beat
 
 
-def validate_scene_transition(scene, previous, beat, *, code="TRANSITION"):
+def inherited_states(previous, scene):
+    owners = set(scene["actor_ids"]) | set(scene.get("prop_ids", [])) | {"environment"}
+    return [state for state in previous["terminal_state"] if state["owner_id"] in owners]
+
+
+def validate_scene_transition(scene, previous, beat, *, code="TRANSITION", require_state_coverage=False):
     path = scene["id"]
     if previous is None:
         require(scene["transition"] == "cut", code, path,
@@ -31,9 +36,16 @@ def validate_scene_transition(scene, previous, beat, *, code="TRANSITION"):
                 and previous["background_id"] == scene["background_id"], code, path,
                 f"Continue requires depends_on to include {previous['id']!r}, "
                 "with the same cast and background as that Scene.")
-        terminal = {(s["owner_id"], s["key"]): s["value"] for s in previous["terminal_state"]}
+        terminal = {(s["owner_id"], s["key"]): s["value"] for s in inherited_states(previous, scene)}
+        if require_state_coverage:
+            initial = {(s["owner_id"], s["key"]) for s in scene["initial_state"]}
+            missing = sorted(set(terminal) - initial)
+            require(not missing, "STATE_CONTINUITY", path,
+                    f"continueの開始状態が不足しています: {missing}。直前Sceneの終了状態を全て引き継ぎ、"
+                    "姿勢・位置・小物・環境を開始時点でリセットしないでください。値の変化はScene内に配置してください。")
         for state in scene["initial_state"]:
             key = state["owner_id"], state["key"]
             require(key not in terminal or terminal[key] == state["value"], "STATE_CONTINUITY", path,
-                    f"Continued initial_state {key[0]}.{key[1]} must retain "
-                    f"previous terminal value {terminal.get(key)!r}; received {state['value']!r}.")
+                    f"continueの開始状態 {key[0]}.{key[1]} が直前の終了状態と一致しません。"
+                    f"必要: {terminal.get(key)!r}、実際: {state['value']!r}。"
+                    "値の変化は開始時点の上書きではなく、Scene内の動作へ配置してください。")

@@ -7,11 +7,21 @@ from .parser import escape
 
 def render_scene(document):
     validate(document, "scene_document")
-    lines = ["# 形式", "* schema: VCD_SCENE_EMD_V1", "", "# 作品"]
+    lines = ["# 形式", "* schema: VCD_SCENE_EMD_V1", ""]
 
     def fields(records):
         lines.extend(f"* {key}: {escape(value)}" for key, value in records)
 
+    from ..audio.nonverbal import VOICE_LABEL
+    for name, config in document.get("vocal_patterns", {}).items():
+        lines.extend(["", "# 発声パターン " + name])
+        fields([("許可", ", ".join(VOICE_LABEL[v] for v in config["allowed"])),
+                ("頻度", config["frequency"]), ("強さ", config["intensity"])])
+        if config["instruction"]:
+            fields([("指示", config["instruction"])])
+    if document.get("vocal_patterns"):
+        lines.append("")
+    lines.append("# 作品")
     fields([("id", document["project_id"]), ("尺", timestamp(document["duration_ms"])), ("元シナリオhash", document["scenario_sha256"] or "なし")])
     fields([("方針", value) for value in document["direction"]] + audio_records(document["audio"]))
     for actor in document["actors"]:
@@ -20,11 +30,19 @@ def render_scene(document):
     for bg in document["backgrounds"]:
         lines.extend(["", "# 背景 " + bg["id"]])
         fields([("画像", bg["image_asset_id"] or "なし"), ("情景", bg["description"])])
+    for prop in document.get("props", []):
+        lines.extend(["", "# 小物 @" + prop["id"]])
+        fields([("名前", prop["name"]), ("特徴", prop["description"]),
+                ("画像", prop["image_asset_id"] or "なし"), ("寸法", prop["size"] or "なし")])
+        if "reference_hint" in prop:
+            fields([("画像内位置", prop["reference_hint"] or "なし")])
     for beat in document["beats"]:
         lines.extend(["", "# 展開定義 " + beat["id"]])
         fields([("出演", ", ".join("@" + a for a in beat["actor_ids"]) or "なし"), ("背景", beat["background_id"]), ("原文", beat["text"])])
         if "transition" in beat:
             fields([("接続", beat["transition"])])
+        if "prop_ids" in beat:
+            fields([("小物", ", ".join("@" + p for p in beat["prop_ids"]) or "なし")])
         if "direction" in beat:
             fields([("方針", value) for value in beat["direction"]])
         # Delimiters are syntax, not part of the escaped authored speech.
@@ -42,6 +60,13 @@ def render_scene(document):
         lines.extend(["", f"# Scene {s['id']} {timestamp(s['start_ms'])} --> {timestamp(s['end_ms'])}"])
         fields([("展開", s["beat_id"]), ("出演", ", ".join("@" + a for a in s["actor_ids"]) or "なし"), ("背景", s["background_id"]), ("接続", s["transition"]),
                 ("依存", ", ".join(s["depends_on"]) or "なし"), ("固定", ", ".join(s["locked"]) or "なし"), ("必須出来事", ", ".join(s["required_event_ids"]) or "なし")])
+        if "visual_directions" in s:
+            fields([("映像方針", value) for value in s["visual_directions"]] or [("映像方針", "なし")])
+        if "visible_actor_ids" in s:
+            fields([("画面内人物", ", ".join("@" + a for a in s["visible_actor_ids"]) or "なし")])
+        for key, label in (("prop_ids", "小物"), ("visible_prop_ids", "画面内小物")):
+            if key in s:
+                fields([(label, ", ".join("@" + p for p in s[key]) or "なし")])
         for label, key in (("開始状態", "initial_state"), ("終了状態", "terminal_state")):
             fields([(f"{label} {'' if state['owner_id'] == 'environment' else '@'}{state['owner_id']}.{state['key']}", state["value"]) for state in s[key]])
         for section, key, field in (("subject_definitions", "subject_descriptions", "text"), ("summary", None, None), ("retention_analysis", "retention", "mode")):
@@ -56,7 +81,8 @@ def render_scene(document):
         for shot in s["shots"]:
             lines.append(f"### Shot {shot['id']} {timestamp(shot['start_ms'])} --> {timestamp(shot['end_ms'])}")
             for e in shot["events"]:
-                lines.append(f"* {e['kind'].upper()} {e['id']} {timestamp(e['start_ms'])} --> {timestamp(e['end_ms'])} | {'' if e['actor_id'] == 'environment' else '@'}{e['actor_id']} | {escape(e['text'])}")
+                label = "NONVERBAL" if e["kind"] == "vocal" else e["kind"].upper()
+                lines.append(f"* {label} {e['id']} {timestamp(e['start_ms'])} --> {timestamp(e['end_ms'])} | {'' if e['actor_id'] == 'environment' else '@'}{e['actor_id']} | {escape(e['text'])}")
         lines.extend(["", "## overall_soundscape"])
         fields([(k, v) for k, v in audio_records(s["audio"]) if k != "BGM"])
         for e in s["sound_events"]:

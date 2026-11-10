@@ -97,7 +97,7 @@ def generate(runtime_root):
 
     runtime_path = str(Path(runtime_root).resolve())
     vc_node("VCDirectorAssetRegistry", 32, [-1250, 180], dict(assets_json="[]", asset_root=""))
-    vc_node("VCDirectorBuild", 33, [-600, 180], dict(input_mode="scenario", emd=(ROOT / "assets/emd/minimal.scenario.emd").read_text(encoding="utf-8"), output_root="", image_facts_json="[]", model_name=default_model_name(), seed=1), "language")
+    vc_node("VCDirectorBuild", 33, [-600, 180], dict(input_mode="scenario", emd=(ROOT / "assets/emd/minimal.scenario.emd").read_text(encoding="utf-8"), output_root="", image_facts_json="[]", model_name=default_model_name(), seed=1, cache_mode="再利用"), "language")
     vc_node("VCDirectorLoad", 34, [80, 180], dict(project_directory="scenario_demo", runtime_root=runtime_path), "video")
     old = nodes[11]
     native = vc_node("VCDirectorRef2VA", 11, old["pos"], dict(prompt="", width=864, height=480, length=243, clip_index=1, runtime_root=runtime_path), "video")
@@ -117,7 +117,7 @@ def generate(runtime_root):
         id="load_preview", length=243, prompt="Load supplies the compiled scene at execution.",
         context_length=0, audio_context_length=0,
     )]}, ensure_ascii=False)
-    nodes[24]["widgets_values"][1] = "vc_director_scenario_demo"
+    nodes[24]["widgets_values"][1] = "scenario_demo"
     nodes[24]["widgets_values"][2] = ""
     nodes[24]["widgets_values"][3:5] = [864, 480]
     # The Context Loop editor collapses unconnected native widgets/sockets.
@@ -163,6 +163,7 @@ def generate(runtime_root):
     link(32, 0, 34, "registry", "VC_ASSET_REGISTRY")
     link(32, 0, 11, "registry", "VC_ASSET_REGISTRY")
     link(34, 0, 24, "plan_json_input", "STRING")
+    link(34, 3, 24, "run_name", "STRING")
     link(34, 2, 24, "generation_fingerprint", "STRING")
     link(34, 1, 11, "compiled", "VC_COMPILED")
     link(8, 1, 11, "clip_index", "INT")

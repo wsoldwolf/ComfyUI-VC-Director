@@ -28,3 +28,7 @@ UIでは`VC · Gemma Settings`から上書きできます。配布WFは`Build.in
 例として、計画を32768 contextへ拡張しつつ翻訳を16384、Visionを8192に保てます。メモリ不足時は該当段階の`n_ctx`・GPU層数・`n_batch`を調整します。推論条件の変更は成功キャッシュのキーへ反映し、計画・翻訳の実行設定と自動Visionの設定は保存revisionの`run_metadata.json`へ記録します。テキストのseedは従来どおり各ノードで設定します。自動Visionはprofileのseed、独立ImageToSubjectEMDはそのノードのseedを使います。
 
 `keep_model_loaded`は公開していません。現行ノードは各段階の終了時にモデルを解放するためです。retry回数・必須台詞保護・Schema制約はこの設定ノードでは変更しません。
+
+Scene構成の速度はGPUのSM使用率・消費電力に加え、診断ログの`decode_tokens_per_second`、`sampling_seconds`、`evaluation_seconds`で確認できます。`sampling_seconds`は構文検査・候補選択と、必要なGPU logits受信待ちを含むsample呼び出しの時間です。`evaluation_seconds`はpromptと生成tokenのeval呼び出しの時間です。CPU側の一つの処理が律速すると、CPU全体の使用率が低くてもGPUが待つ場合があります。`n_batch`は主にprompt評価の設定で、単一Sceneの逐次生成をその数だけ同時実行する設定ではありません。
+
+標準llama.cppのtop-k samplingには候補検査の高速経路を自動適用します。上位候補から、従来の全語彙検査と同じtop-k又はtop-p/min-pの生存候補になることを確認できる場合だけ、後段の検査対象を絞ります。確定できない場合・同点・不明なsampling構成では全語彙検査へ戻り、native grammarと元のsamplerは必ず実行します。新しい設定操作やcache削除は不要です。効果はモデルと生成内容で変わるため、使用率100%を前提にせず実行時間で比較してください。反映にはComfyUI再起動が必要です。

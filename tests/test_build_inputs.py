@@ -1,4 +1,5 @@
 import io
+import hashlib
 import json
 import unittest
 from pathlib import Path
@@ -87,6 +88,10 @@ class BuildInputTests(unittest.TestCase):
         inference = settings(planning_n_ctx=32768, compiler_n_ctx=12288, vision_n_ctx=8192,
                              vision_max_tokens=512, vision_gpu_layers=20)
         with temporary_directory() as temp:
+            if assets:
+                image = Path(temp, "hero.png")
+                image.write_bytes(b"reference image; Vision decoding is mocked")
+                assets[0].update(locator=str(image), sha256=hashlib.sha256(image.read_bytes()).hexdigest())
             with patch("vc_director.nodes.node_story_builder.node._backend", side_effect=[planning, translation]) as backend, \
                  patch("vc_director.nodes.node_story_builder.node.cache_root", return_value=Path(temp) / "cache"), \
                  patch("vc_director.core.vision.resolve_vision_model_pair", return_value="vision-pair"), \
