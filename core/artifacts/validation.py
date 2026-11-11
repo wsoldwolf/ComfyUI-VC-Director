@@ -12,6 +12,7 @@ from .transitions import validate_beat_transitions, validate_scene_transition
 from ..audio.roles import scene_roles
 from .props import visible_props, tag_ids
 from .visible_text import outside_visible_text
+from .shot_timing import validate_shot_coverage
 
 
 def unique(items, path):
@@ -169,14 +170,10 @@ def validate_story(document):
         for key in ("bgm_description", "ambience_description", "effects_description"):
             if scene["audio"][key]:
                 _prose(scene["audio"][key], f"{path}/audio/{key}", list(entities), cues=True)
-        endpoint, local_events, spoken = 0, {}, []
+        validate_shot_coverage(scene)
+        local_events, spoken = {}, []
         for shot in scene["shots"]:
             shot_ids.append(shot["id"])
-            require(shot["start_ms"] == endpoint and shot["start_ms"] < shot["end_ms"] <= duration, "SHOT_COVERAGE", shot["id"],
-                    f"Shot must start at {endpoint}ms and end in ({endpoint}, {duration}]ms, relative to Scene start; "
-                    f"received {shot['start_ms']}..{shot['end_ms']}ms. Repartition earlier Shots to leave time for all events, "
-                    f"or use one Shot spanning 0..{duration}ms. Zero-length Shots are forbidden.")
-            endpoint = shot["end_ms"]
             for e in shot["events"]:
                 event_ids.append(e["id"])
                 local_events[e["id"]] = e
@@ -201,11 +198,6 @@ def validate_story(document):
                             "ACTION/CAMERA must target a visible actor or environment; keep off-screen speech in DIALOGUE")
                     require(e["dialogue_id"] is None and e["language"] is None, "EVENT", e["id"], "Only dialogue has speech metadata")
                     _prose(e["text"], e["id"], list(visible_entities), cues=True, music_allowed=scene["audio"]["bgm"] != "none")
-        require(endpoint == duration, "SHOT_COVERAGE", path,
-                f"Shots must cover 0..{duration}ms; current final Shot ends at {endpoint}ms "
-                f"({duration - endpoint}ms missing). Regenerate this Scene using one Shot from 0 to {duration}ms "
-                "with a full-span CAMERA. Place all required actions and authored dialogue inside it; "
-                "do not omit events or change the approved Scene duration.")
         require(scene["audio"]["vocal"] != "dialogue" or bool(spoken), "DIALOGUE_PERMISSION", path, "Narrow vocal to none in a Scene without dialogue")
         validate_vocal_timing(scene)
         for e in scene["sound_events"]:

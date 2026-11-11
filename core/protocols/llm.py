@@ -19,7 +19,7 @@ from ..audio.nonverbal import permits_nonverbal, VOICE_TEXT
 from ..utilities.progress import emit_progress
 
 PROMPT_VERSION = "vcd-story-v4-complete-beats"
-STAGE_PROMPT_VERSIONS = dict(enhance="vcd-story-v5-required-event-ids", detail="vcd-story-v26-sound-bindings", outline="vcd-story-v9-prop-tags")
+STAGE_PROMPT_VERSIONS = dict(enhance="vcd-story-v5-required-event-ids", detail="vcd-story-v27-shot-timing", outline="vcd-story-v10-dependencies")
 LOGGER = logging.getLogger("vc_director.planning")
 RECORDS = dict(enhance="ENHANCED", outline="SCENES", detail="DETAIL", retime="TIMING")
 DEFINITIONS = dict(enhance="enhanced_story", outline="scene_outline", detail="scene", retime="timing_patch")
@@ -200,6 +200,9 @@ def generation_schema(stage, payload, *, errors=(), visible_actor_ids=None, outl
         if mode != "auto":
             definition["properties"]["transition"] = {"const": mode}
         first = copy.deepcopy(definition)
+        accepted_ids = [scene["id"] for scene in payload["accepted_outlines"]]
+        first["properties"]["depends_on"] = (dict(type="array", items={"enum": accepted_ids},
+            uniqueItems=True, maxItems=len(accepted_ids)) if accepted_ids else {"const": []})
         previous = payload["accepted_outlines"][-1] if payload["accepted_outlines"] else None
         start = previous["end_ms"] if previous else 0
         first["properties"].update(start_ms={"const": start},
@@ -453,7 +456,9 @@ class StageRunner:
         vocal_timing_repair_used = False
         dialogue_placement_repair_used = False
         sound_trigger_repair_used = False
+        shot_timing_repair_used = False
         outline_repair_used = False
+        dependency_repair_used = False
         accepted_visual = None
         prose_repairs_used, accepted_prose = set(), {}
         shot_coverage_repair = False
@@ -542,6 +547,7 @@ class StageRunner:
                             set_text(result, target, saved["text"])
                             attempt_trace.setdefault("reused_fields", []).append(target["key"])
                 outline_repaired = False
+                dependency_repaired = False
                 while True:
                     try:
                         if stage == "outline" and outline_intervals is not None:
@@ -550,6 +556,23 @@ class StageRunner:
                         check(result)
                         break
                     except VCError as exc:
+                        if (stage == "outline" and exc.diagnostic.code == "OUTLINE_DEPENDENCY"
+                                and not dependency_repaired and not dependency_repair_used):
+                            from .dependency_repair import repair_outline_dependencies
+                            dependency_repaired = True
+                            repair_trace = attempt_trace["dependency_repair"] = {}
+                            LOGGER.info("Planning outline / %s: repairing Scene IDs and dependencies only", target_id)
+                            try:
+                                repaired = repair_outline_dependencies(self.backend, result, payload, repair_trace)
+                            except Exception:
+                                repair_trace["status"] = "failed"
+                                self._save_diagnostic(diagnostic_path, diagnostic)
+                                raise
+                            finally:
+                                dependency_repair_used |= repair_trace.get("method") == "dependency_choices"
+                            result = response["records"][0]["payload"] = repaired
+                            validate(response, stage + "_response")
+                            continue
                         if (stage == "outline" and exc.diagnostic.code == "OUTLINE_REQUIRED" and not outline_repaired
                                 and (len(result["scenes"]) == 1 or not outline_repair_used)):
                             from .outline_repair import repair_required_assignments
@@ -584,6 +607,17 @@ class StageRunner:
                             LOGGER.info("Planning detail / %s: selecting one placement per authored dialogue", target_id)
                             try:
                                 repaired = repair_duplicate_dialogue(self.backend, result, payload, repair_trace)
+                            except Exception:
+                                repair_trace["status"] = "failed"
+                                self._save_diagnostic(diagnostic_path, diagnostic)
+                                raise
+                        elif exc.diagnostic.code == "SHOT_COVERAGE" and not shot_timing_repair_used:
+                            from .shot_timing_repair import repair_shot_timing
+                            shot_timing_repair_used = True
+                            repair_trace = attempt_trace["shot_timing_repair"] = {}
+                            LOGGER.info("Planning detail / %s: repairing Shot and visual timing only", target_id)
+                            try:
+                                repaired = repair_shot_timing(self.backend, result, payload, exc.diagnostic, repair_trace)
                             except Exception:
                                 repair_trace["status"] = "failed"
                                 self._save_diagnostic(diagnostic_path, diagnostic)
@@ -644,12 +678,16 @@ class StageRunner:
                     attempt_trace["visual_direction_repair"]["status"] = "accepted"
                 if "required_assignment_repair" in attempt_trace:
                     attempt_trace["required_assignment_repair"]["status"] = "accepted"
+                if "dependency_repair" in attempt_trace:
+                    attempt_trace["dependency_repair"]["status"] = "accepted"
                 if "vocal_timing_repair" in attempt_trace:
                     attempt_trace["vocal_timing_repair"]["status"] = "accepted"
                 if "dialogue_placement_repair" in attempt_trace:
                     attempt_trace["dialogue_placement_repair"]["status"] = "accepted"
                 if "sound_trigger_repair" in attempt_trace:
                     attempt_trace["sound_trigger_repair"]["status"] = "accepted"
+                if "shot_timing_repair" in attempt_trace:
+                    attempt_trace["shot_timing_repair"]["status"] = "accepted"
                 for repair_trace in attempt_trace.get("prose_repairs", []):
                     repair_trace["status"] = "accepted"
                 if self.cache:

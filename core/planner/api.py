@@ -12,6 +12,7 @@ from ..artifacts.coverage import validate_required_coverage
 from ..vision.image_facts import apply_image_facts, apply_scene_image_facts
 from .camera import validate_camera_plan
 from .identifiers import resolve_generated_ids
+from .outline_dependencies import validate_outline_dependencies
 from .budget import allocate_beat_windows
 
 
@@ -107,7 +108,7 @@ class StoryTimelinePlanner:
                             f"実際: {outline['start_ms']}..{outline['end_ms']}ms"
                             f"（長さ{outline['end_ms'] - outline['start_ms']}ms、上限15000ms）。"
                             "合計尺を変えず、空白・重複のない15秒以内のSceneへ分割してください。")
-                    require(outline["id"] not in {s["id"] for s in accepted} and set(outline["depends_on"]) <= {s["id"] for s in accepted}, "OUTLINE_DEPENDENCY", outline["id"], "Duplicate or forward dependency")
+                    validate_outline_dependencies(outline, accepted)
                     validate_scene_transition(outline, accepted[-1] if accepted else None, beat,
                                               code="OUTLINE_TRANSITION", require_state_coverage=True)
                     accepted.append(outline)

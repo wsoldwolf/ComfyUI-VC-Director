@@ -614,6 +614,14 @@
           "widget": {
             "name": "runtime_root"
           }
+        },
+        {
+          "name": "ref_image_size",
+          "type": "COMBO",
+          "link": null,
+          "widget": {
+            "name": "ref_image_size"
+          }
         }
       ],
       "outputs": [
@@ -642,7 +650,8 @@
         480,
         243,
         1,
-        "C:\\Software\\ComfyUI\\custom_nodes\\ComfyUI-MiniMaxH3-Contex-Loop"
+        "C:\\Software\\ComfyUI\\custom_nodes\\ComfyUI-MiniMaxH3-Contex-Loop",
+        "max"
       ]
     },
     {

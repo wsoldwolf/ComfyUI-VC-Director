@@ -100,7 +100,7 @@ def generate(runtime_root):
     vc_node("VCDirectorBuild", 33, [-600, 180], dict(input_mode="scenario", emd=(ROOT / "assets/emd/minimal.scenario.emd").read_text(encoding="utf-8"), output_root="", image_facts_json="[]", model_name=default_model_name(), seed=1, cache_mode="再利用"), "language")
     vc_node("VCDirectorLoad", 34, [80, 180], dict(project_directory="scenario_demo", runtime_root=runtime_path), "video")
     old = nodes[11]
-    native = vc_node("VCDirectorRef2VA", 11, old["pos"], dict(prompt="", width=864, height=480, length=243, clip_index=1, runtime_root=runtime_path), "video")
+    native = vc_node("VCDirectorRef2VA", 11, old["pos"], dict(prompt="", width=864, height=480, length=243, clip_index=1, runtime_root=runtime_path, ref_image_size="max"), "video")
     for l in workflow["links"]:
         if l[3] == 11:
             old_name = old["inputs"][l[4]]["name"]

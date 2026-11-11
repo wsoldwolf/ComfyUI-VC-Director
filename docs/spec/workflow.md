@@ -44,6 +44,8 @@ VC実行adapterは次を契約する。
 4. VC事前検証で保存revision・参照一覧・素材hash・runtime Contractの一致を必須とする。
 5. conditioning直前のprompt全体とraw lengthをCompiler出力に照合する。台詞中の@記号も保持する。
 
+VC Ref2VAの任意入力`ref_image_size`は`max`（既定）又は`match`を受け取り、標準ノードの同名入力へ渡す。設定省略時も`max`とする。これは静止画参照のサイズだけを選ぶ実行時設定で、参照の順番・番号・有効素材・prompt・出力動画サイズを変更しない。`max`は標準実装の短辺2048px上限、`match`は出力画素数に合わせた縮小であり、標準実装の縦横比保持と32px単位調整を使用する。旧WFの入力・widgetの位置を変えず、末尾へ追加する。
+
 既存プラグインへのmonkeypatchは行わない。登録SchemaとPlan正規化の照合は`tools/verify_context_loop.py`で行う。実Queue・生成品質とは別の検証とする。
 
 動画モデルはMV-DirectorのHybrid構成を採用する。FL2VAをbase、Ref2VAをoverlayとし、block 25〜49のAdaLNを重ねる。native Ref2VA conditioningの接続とDiffusion Modelのbase選択は別の設定であり、Ref2VA単独モデルを必須としない。モデル経路はHybrid Loader → Turbo LoRA（Bypass）→ Comfy Kitchen Attention → SLA → Spectrum → FP16 accumulation → Sigma Shiftとする。切替時はモデルpatchを含む動画経路全体をMuteし、有効化時にはLoRAのBypassを維持する。設定・追加依存は[配布WF](../../workflows/README.md#動画モデルと高速化)を正本とする。

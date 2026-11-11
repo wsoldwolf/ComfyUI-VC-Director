@@ -33,6 +33,8 @@ Visionで補完する人物の`特徴`・背景の`情景`は、入力シナリ�
 
 解像度は`Production Resolution`、ステップ数はProduction Planの`Generation defaults`で指定します。接続されたLoadのシーンを実行時に使用します。旧WFで`The plan needs at least one scene in shots.`が出る場合は、修復欄へ`{"shots":[{"id":"load_preview","length":243,"prompt":"Load supplies the compiled scene at execution.","context_length":0,"audio_context_length":0}]}`を貼り付け、`Apply repaired JSON`を押すと設定欄が表示されます。
 
+参照画像の解像度は`VC · Ref2VA`の`ref_image_size`で選びます。既定は`max`（標準Ref2VAの最大設定、短辺2048px上限）で、`match`へ変更すると出力動画の画素数に合わせる従来の縮小方式になります。小さな参照画像は原寸基準で、サイズは32px単位に調整されます。`max`はVRAM使用量・生成時間が増える場合があります。出力動画の解像度とは独立しており、言語生成の再Buildは不要です。既存WFもComfyUI再起動・ブラウザ再読み込み後、ノード末尾の選択欄から変更できます。
+
 ```powershell
 python tools/generate_workflow.py --context-loop-root PATH/TO/ComfyUI-MiniMaxH3-Contex-Loop
 python tools/verify_context_loop.py --context-loop-root PATH/TO/ComfyUI-MiniMaxH3-Contex-Loop

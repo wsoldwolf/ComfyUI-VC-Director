@@ -44,6 +44,10 @@ Scene生成時にsummary等の文章へ発声表現が混入した場合は、�
 
 `VC · Audio Control`はSigma ShiftのMODEL、Text EncoderのCLIP、Loadのcompiledを受け取り、MODELをGuiderとScheduler、CLIPをRef2VA、generation_fingerprintをProduction Planへ渡します。EMDに`BGM抑制: negpip`がある場合だけ外部NegPiPを有効化します。`value_strength`は既定1、`measure_attention_mass`は診断用で既定falseです。音声接続はEMDの`音声接続: auto/cut/continue`からCompilerが決定し、この強度widgetとは独立します。
 
+`VC · Ref2VA`の`ref_image_size`で静止画参照の入力解像度を選べます。既定の`max`は標準Ref2VAの最大設定で、短辺2048pxを上限に大きな画像を縮小し、小さな画像は原寸を基準に扱います。サイズは32px単位に調整され、無制限の原寸入力ではありません。`match`は縦横比を保ち、出力動画の画素数を目安に縮小する従来の方式です。人物・小物・背景の静止画に適用され、動画・音声参照や出力動画の幅・高さは変えません。`max`はVRAM使用量と処理時間が増える場合があります。
+
+設定は標準`MiniMaxH3ReferenceToVideo`へそのまま渡し、VC側に別のリサイズ処理を追加しません。旧WFやAPIでこの入力がない場合も`max`を使用します。既存widget・socketの順序は保持し、新しい選択欄は末尾へ追加します。ComfyUIを再起動し、ブラウザを再読み込みして変更してください。言語側の再Buildは不要です。
+
 `VC · 32-bit Seed`と`VC · Load Text File`はMV-Directorから移植した独立ノードです。seedの`-1`は初回の乱数生成、`random`は実行ごとの乱数生成、`randomize once`はブラウザで乱数を設定してfixedへ切り替えます。テキストはUTF-8（BOM可）の`.txt`、最大16 MiBです。内容はWFへ埋め込まれるため、保存後の実行には元ファイルのパスは不要です。追加ノードを使う前にComfyUIを再起動し、ブラウザを再読み込みしてください。
 
 `VC · AssetRegistry`は画像の複数D&D・ファイル選択に対応します。プレビューと編集可能な素材IDを表示し、`assets_json`へ追記します。EMDの`画像`欄へそのIDを指定してください。登録解除はファイルを削除しません。アップロード画像のlocatorはComfyUI標準の` [input]`注釈を付け、Queue時にinput内の絶対パスへ解決します。その他の素材は既存の`asset_root`を基準に扱います。
